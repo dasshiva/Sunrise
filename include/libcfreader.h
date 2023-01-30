@@ -27,6 +27,10 @@ typedef struct {
   string* data;
 } utf8_elem;
 
+typedef struct {
+  u2 name;
+  u2 desc;
+} ntype_elem;
 // Represents a field, method or interface method ref
 typedef struct {
   u2 class;
@@ -40,6 +44,8 @@ typedef struct {
     mfiref_elem* mref; // method reference 
     mfiref_elem* fref; // field reference 
     mfiref_elem* iref; // interface method reference 
+    u2 class; // index representing class name;
+    ntype_elem* nt;
   } elem;
 } pool_elem;
 
@@ -47,12 +53,51 @@ typedef struct {
   list* elems;
 } cpool;
 cpool* new_cpool(handle* h, u2 len);
+string* get_utf8(cpool* pool, u2 index);
+
+typedef struct {
+  string* name;
+  union {
+    u2 const_val;
+  } attr;
+} attrs;
+
+typedef struct {
+  u2 flags;
+  u2 name;
+  u2 desc;
+  u2 attrs;
+  list* attrs;
+} field;
 
 typedef struct {
   u2 minor;
   u2 major;
   u2 cp_len;
   cpool* cp;
+  u2 flags;
+  string* super_class;
+  string* this_class;
+  u2 ints_count;
+  u2* ints;
+  u2 fields_count;
 } class;
 class* new_class(char* name);
+
+#define PUB 0x0001
+#define PRIV 0x0002
+#define PROT 0x0004
+#define STAT 0x0008
+#define FINAL 0x0010
+#define SYNC 0x0020
+#define VOL 0x0040
+#define VAR 0x0080
+#define TRANS 0x0080
+#define NATIVE 0x0100
+#define INTER 0x0200
+#define ABS 0x0400
+#define ANNOT 0x2000
+#define ENUM 0x4000
+
+#define is(c, f) ((c->flags & f) != 0)
 #endif

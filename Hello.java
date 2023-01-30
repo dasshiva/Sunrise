@@ -1,5 +1,5 @@
 public class Hello {
-	private int length;
+	private static int length;
 	public static void main() {
 		for (;;) {
 		}
