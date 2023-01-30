@@ -1,0 +1,33 @@
+#ifndef _LIBUTILS_H_
+#define _LIBUTILS_H_
+
+#include "types.h"
+#include <stdarg.h>
+
+typedef struct {
+  u4 len;
+  u4 cap;
+  char* buf;
+} string;
+string* new_str(const char* str);
+int equals(const string* lhs, const string* rhs);
+void concat(string* dest, const string* src);
+string* substr(string* s, const u4 start, const u4 end);
+
+typedef struct __list {
+  u4 len;
+  u4 index;
+  void* data;
+  struct __list* next;
+  struct __list* prev;
+} list;
+list* new_list(void);
+void add(list* l, void* data);
+void* at(list* l, u4 index);
+void delete(list* l, u4 index);
+
+#define is_null(a) a == NULL
+void dbg(char* fmt, ...);
+void err(char* fmt, ...);
+
+#endif
