@@ -11,5 +11,6 @@ class* new_class(char* file) {
   dbg("Running class file version %d.%d", c->major, c->minor);
   c->cp_len = get_u2(h);
   dbg("Constant pool length is %d", c->cp_len);
+  c->cp = new_cpool(h, c->cp_len);
   return c;
 }

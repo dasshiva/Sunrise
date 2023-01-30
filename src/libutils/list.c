@@ -40,7 +40,7 @@ void add(list* l, void* data) {
   l->len++;
 }
 
-void* at(list* l, u4 index) {
+void* get(list* l, u4 index) {
   if (l->len <= index) {
     return NULL;
   }

@@ -10,7 +10,8 @@ typedef struct {
   char* buf;
 } string;
 string* new_str(const char* str);
-string* new_empty_str();
+string* new_empty_str(void);
+string* str_with_len(u4 len);
 void append(string* s, char c);
 char at(string *s, u4 index);
 int equals(const string* lhs, const string* rhs);
@@ -26,7 +27,7 @@ typedef struct __list {
 } list;
 list* new_list(void);
 void add(list* l, void* data);
-void* at(list* l, u4 index);
+void* get(list* l, u4 index);
 void delete(list* l, u4 index);
 
 #define is_null(a) a == NULL

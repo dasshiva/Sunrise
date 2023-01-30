@@ -13,8 +13,15 @@ string* new_str(const char* str) {
   return s;
 }
 
-string* new_empty_str() {
+string* new_empty_str(void) {
   return new_str("");
+}
+
+string* str_with_len(u4 len) {
+  string* s = new_empty_str();
+  if (s->cap > len) 
+    s->buf = realloc(s->buf, len);
+  return s;
 }
 
 void append(string* s, char c) {
@@ -26,6 +33,7 @@ void append(string* s, char c) {
   s->buf[s->len + 1] = '\0';
   s->len++;
 }
+
 int equals(const string* lhs, const string* rhs) {
   if (lhs->len == rhs->len) {
     u4 a = 0;
