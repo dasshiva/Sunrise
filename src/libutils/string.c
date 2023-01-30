@@ -13,6 +13,19 @@ string* new_str(const char* str) {
   return s;
 }
 
+string* new_empty_str() {
+  return new_str("");
+}
+
+void append(string* s, char c) {
+  if (s->len == s->cap) {
+    s->buf = realloc(s->buf, s->cap + 20);
+    s->cap += 20;
+  }
+  s->buf[s->len] = c;
+  s->buf[s->len + 1] = '\0';
+  s->len++;
+}
 int equals(const string* lhs, const string* rhs) {
   if (lhs->len == rhs->len) {
     u4 a = 0;
@@ -37,6 +50,8 @@ void concat(string* dest, const string* src) {
 }
 
 string* substr(string* s, const u4 start, const u4 end) {
+  if (start >= end) 
+    err("Trying to extract sub string when start index(%d) is more than end index(%d)", start, end);
   string* str = malloc(sizeof(string));
   str->len = end - start;
   str->cap = str->len + 20;
@@ -45,4 +60,10 @@ string* substr(string* s, const u4 start, const u4 end) {
     str->buf[j] = s->buf[i];
   }
   return s;
+}
+
+char at(string *s, u4 index) {
+  if (index == s->len) 
+    err("Index %d is invalid for string of length %d", index, s->len);
+  return s->buf[index];
 }

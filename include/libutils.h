@@ -10,6 +10,9 @@ typedef struct {
   char* buf;
 } string;
 string* new_str(const char* str);
+string* new_empty_str();
+void append(string* s, char c);
+char at(string *s, u4 index);
 int equals(const string* lhs, const string* rhs);
 void concat(string* dest, const string* src);
 string* substr(string* s, const u4 start, const u4 end);

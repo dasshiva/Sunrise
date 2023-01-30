@@ -1,5 +1,4 @@
 #include <include/libcfreader.h>
-#include <include/libutils.h>
 #include <stdlib.h>
 
 class* new_class(char* file) {
