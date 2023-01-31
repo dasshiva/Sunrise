@@ -22,14 +22,14 @@ handle* open_file(char* name) {
   return h;
 }
 
-u1 get_u1(handle* h) {
+inline u1 get_u1(handle* h) {
   CHECK(h);
   u1 read1 = h->data[h->pos];
   h->pos++;
   return read1;
 }
 
-u2 get_u2(handle* h) {
+inline u2 get_u2(handle* h) {
   u1 read1 = get_u1(h);
   u1 read2 = get_u1(h);
   return (read1 << 8) | read2;
@@ -41,4 +41,10 @@ u4 get_u4(handle* h) {
   u1 read3 = get_u1(h);
   u1 read4 = get_u1(h);
   return (read4 << 0) | (read3 << 8) | (read2 << 16) | (read1 << 24);
+}
+
+inline void skip(handle* h, u4 amt) {
+  if (h->pos + amt >= h->size) 
+    err("Cannot skip %s bytes as position exceeds file size", amt);
+  h->pos += amt;
 }

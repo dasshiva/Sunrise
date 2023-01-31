@@ -34,11 +34,11 @@ void append(string* s, char c) {
   s->len++;
 }
 
-int equals(const string* lhs, const string* rhs) {
-  if (lhs->len == rhs->len) {
+int equals(const string* lhs, const char* rhs) {
+  if (lhs->len == strlen(rhs)) {
     u4 a = 0;
     while (a < lhs->len) {
-      if (lhs->buf[a] != rhs->buf[a]) 
+      if (lhs->buf[a] != rhs[a]) 
         return 0;
     }
     return 1;

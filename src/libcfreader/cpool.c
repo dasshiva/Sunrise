@@ -1,9 +1,8 @@
 #include <include/libcfreader.h>
 #include <stdlib.h>
 
-cpool* new_cpool(handle* h, u2 len) {
-  cpool* p = malloc(sizeof(cpool));
-  p->elems = new_list();
+list* new_cpool(handle* h, u2 len) {
+  list* p = new_list();
   for (u2 i = 0; i < len-1; i++) {
     u1 tag = get_u1(h);
     pool_elem* pelem = malloc(sizeof(pool_elem));
@@ -40,13 +39,13 @@ cpool* new_cpool(handle* h, u2 len) {
       }
       default: err("Unknown tag: %d", tag);
     }
-    add(p->elems, pelem);
+    add(p, pelem);
   }
   return p;
 }
 
-string* get_utf8(cpool* pool, u2 index) {
-  pool_elem* p = get(pool->elems, index - 1);
+string* get_utf8(list* pool, u2 index) {
+  pool_elem* p = get(pool, index - 1);
   switch (p->tag) {
     case UTF8: return p->elem.utf->data; 
     case CLASS: {

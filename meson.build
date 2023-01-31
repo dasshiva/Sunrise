@@ -4,7 +4,7 @@ project('sunrise', 'c',
 src = ['src/main.c']
 libutilssrc = ['src/libutils/string.c', 'src/libutils/list.c', 'src/libutils/log.c']
 libutils = static_library('libutils', libutilssrc)
-libcfreadersrc = ['src/libcfreader/file.c', 'src/libcfreader/class.c', 'src/libcfreader/cpool.c']
+libcfreadersrc = ['src/libcfreader/file.c', 'src/libcfreader/class.c', 'src/libcfreader/cpool.c', 'src/libcfreader/attrs.c']
 libcfreader = static_library('libcfreader', libcfreadersrc)
 exe = executable('sun', src, include_directories: 'include/', link_with: [libutils , libcfreader])
 test('basic', exe)

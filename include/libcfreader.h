@@ -13,6 +13,7 @@ handle* open_file(char* name);
 u1 get_u1(handle* h);
 u2 get_u2(handle* h);
 u4 get_u4(handle* h);
+void skip(handle* h, u4 amt);
 
 #define UTF8 1 //  CONSTANT_Utf8
 #define CLASS 7 // CONSTANT_Class
@@ -49,38 +50,42 @@ typedef struct {
   } elem;
 } pool_elem;
 
-typedef struct {
-  list* elems;
-} cpool;
-cpool* new_cpool(handle* h, u2 len);
-string* get_utf8(cpool* pool, u2 index);
+list* new_cpool(handle* h, u2 len);
+string* get_utf8(list* pool, u2 index);
 
 typedef struct {
   string* name;
   union {
     u2 const_val;
+    struct {
+      
+    }
   } attr;
 } attrs;
+list* init_attrs(handle* h, list* cpool, u2 len);
 
 typedef struct {
   u2 flags;
-  u2 name;
-  u2 desc;
-  u2 attrs;
+  string* name;
+  string* desc;
+  u2 attrs_count;
   list* attrs;
 } field;
+typedef field method;
 
 typedef struct {
   u2 minor;
   u2 major;
   u2 cp_len;
-  cpool* cp;
+  list* cp;
   u2 flags;
   string* super_class;
   string* this_class;
   u2 ints_count;
   u2* ints;
   u2 fields_count;
+  list* fields;
+  u2 mets_count;
 } class;
 class* new_class(char* name);
 

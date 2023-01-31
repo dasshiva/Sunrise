@@ -14,7 +14,7 @@ string* new_empty_str(void);
 string* str_with_len(u4 len);
 void append(string* s, char c);
 char at(string *s, u4 index);
-int equals(const string* lhs, const string* rhs);
+int equals(const string* lhs, const char* rhs);
 void concat(string* dest, const string* src);
 string* substr(string* s, const u4 start, const u4 end);
 
