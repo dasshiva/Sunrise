@@ -40,6 +40,7 @@ int equals(const string* lhs, const char* rhs) {
     while (a < lhs->len) {
       if (lhs->buf[a] != rhs[a]) 
         return 0;
+      a++;
     }
     return 1;
   }

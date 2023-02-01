@@ -70,6 +70,7 @@ typedef struct {
         u2 catch_type;
       } *etable;
     } code;
+    string* file;
   } attr;
 } attrs;
 list* init_attrs(handle* h, list* cpool, u2 len);
@@ -97,6 +98,8 @@ typedef struct {
   list* fields;
   u2 mets_count;
   list* methods;
+  u2 attrs_count;
+  list* attrs;
 } class;
 class* new_class(char* name);
 

@@ -16,6 +16,7 @@ list* new_cpool(handle* h, u2 len) {
         for (u2 i = 0; i < e->length; i++) {
           append(e->data, (char) get_u1(h));
         }
+        dbg("UTF8 content - %s", e->data->buf);
         pelem->elem.utf = e;
         break;
       }

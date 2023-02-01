@@ -41,8 +41,9 @@ class* new_class(char* file) {
     add(c->fields, f);
   }
   c->mets_count = get_u2(h);
+  dbg("Number of methods declared %d", c->mets_count);
   c->methods = new_list();
-  for (u2 i = 0; i < c->fields_count; i++) {
+  for (u2 i = 0; i < c->mets_count; i++) {
     method* m = malloc(sizeof(method));
     m->flags = get_u2(h);
     m->name = get_utf8(c->cp, get_u2(h));
@@ -52,5 +53,7 @@ class* new_class(char* file) {
     m->attrs = init_attrs(h, c->cp, m->attrs_count);
     add(c->methods, m);
   }
+  c->attrs_count = get_u2(h);
+  c->attrs = init_attrs(h, c->cp, c->attrs_count);
   return c;
 }
