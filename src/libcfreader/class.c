@@ -41,6 +41,7 @@ class* new_class(char* file) {
     add(c->fields, f);
   }
   c->mets_count = get_u2(h);
+  c->mets = new_list();
   for (u2 i = 0; i < c->fields_count; i++) {
     method* m = malloc(sizeof(method));
     m->flags = get_u2(h);
@@ -49,7 +50,7 @@ class* new_class(char* file) {
     m->attrs_count = get_u2(h);
     dbg("Found method %s with signature %s and %d attributes", m->name->buf, m->desc->buf, m->attrs_count);
     m->attrs = init_attrs(h, c->cp, m->attrs_count);
-    add(c->fields, m);
+    add(c->methods, m);
   }
   return c;
 }

@@ -58,8 +58,18 @@ typedef struct {
   union {
     u2 const_val;
     struct {
-      
-    }
+      u2 stack;
+      u2 locals;
+      u4 code_len;
+      u1* exec;
+      u2 etable_len;
+      struct {
+        u2 start_pc;
+        u2 end_pc;
+        u2 handler_pc;
+        u2 catch_type;
+      } etable*;
+    } code;
   } attr;
 } attrs;
 list* init_attrs(handle* h, list* cpool, u2 len);
@@ -86,6 +96,7 @@ typedef struct {
   u2 fields_count;
   list* fields;
   u2 mets_count;
+  list* methods;
 } class;
 class* new_class(char* name);
 

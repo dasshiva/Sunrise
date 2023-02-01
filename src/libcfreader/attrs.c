@@ -9,9 +9,15 @@ list* init_attrs(handle* h, list* cpool, u2 len) {
     attrs* at = malloc(sizeof(attrs));
     at->name = get_utf8(cpool, get_u2(h));
     if (equals(at->name, "ConstantValue")) {
+      skip(h, 4);
       dbg("Found attribute ConstantValue");
       at->attr.const_val = get_u2(h);
       add(p, at);
+    }
+    else if (equals(at->name, "Code")) {
+      skip(h, 4);
+      dbg("Found attribute Code");
+      at->attr.code.
     }
     else {
       skip(h, get_u4(h));
