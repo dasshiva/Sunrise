@@ -68,7 +68,7 @@ typedef struct {
         u2 end_pc;
         u2 handler_pc;
         u2 catch_type;
-      } etable*;
+      } *etable;
     } code;
   } attr;
 } attrs;

@@ -41,7 +41,7 @@ class* new_class(char* file) {
     add(c->fields, f);
   }
   c->mets_count = get_u2(h);
-  c->mets = new_list();
+  c->methods = new_list();
   for (u2 i = 0; i < c->fields_count; i++) {
     method* m = malloc(sizeof(method));
     m->flags = get_u2(h);
