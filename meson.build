@@ -1,7 +1,7 @@
 project('sunrise', 'c',
   version : '0.1',
   default_options : ['warning_level=3'])
-src = ['src/main.c']
+src = ['src/main.c', 'src/runtime/loader.c']
 libutilssrc = ['src/libutils/string.c', 'src/libutils/list.c', 'src/libutils/log.c']
 libutils = static_library('libutils', libutilssrc)
 libcfreadersrc = ['src/libcfreader/file.c', 'src/libcfreader/class.c', 'src/libcfreader/cpool.c', 'src/libcfreader/attrs.c']

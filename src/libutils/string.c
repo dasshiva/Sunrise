@@ -48,13 +48,14 @@ int equals(const string* lhs, const char* rhs) {
   return 0;
 }
 
-void concat(string* dest, const string* src) {
-  if (dest->cap + 1 < dest->len + src->len) {
-    dest->cap = dest->len + src->len + 20;
+void concat(string* dest, const char* src) {
+  int len = strlen(src);
+  if (dest->cap + 1 < dest->len + len) {
+    dest->cap = dest->len + len + 20;
     dest->buf = realloc(dest->buf, dest->cap);
   }
-  strcat(dest->buf, src->buf);
-  dest->len += src->len;
+  strcat(dest->buf, src);
+  dest->len += len;
   dest->buf[dest->len] = '\0';
 }
 
@@ -75,4 +76,18 @@ char at(string *s, u4 index) {
   if (index == s->len) 
     err("Index %d is invalid for string of length %d", index, s->len);
   return s->buf[index];
+}
+
+int find(string* s, char c) {
+  for (int i = 0; i < s->len; i++) {
+    if (s->buf[i] == c) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void free_str(string* s) {
+  free(s->buf);
+  free(s);
 }

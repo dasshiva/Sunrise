@@ -7,9 +7,14 @@
   err("Attempt to read file after content has been exhausted");
 
 handle* open_file(char* name) {
-  FILE* f = fopen(name, "rb");
+  string* temp = new_str(name);
+  if(find(temp, '.') == -1) {
+    concat(temp, ".class");
+  }
+  FILE* f = fopen(temp->buf, "rb");
   if (f == NULL) 
-    err("Could not read file %s", name);
+    err("Could not read file %s", temp->buf);
+  free_str(temp);
   fseek(f, 0, SEEK_END);
   u8 size = ftell(f);
   fseek(f, 0, SEEK_SET);

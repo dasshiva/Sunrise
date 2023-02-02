@@ -15,8 +15,10 @@ string* str_with_len(u4 len);
 void append(string* s, char c);
 char at(string *s, u4 index);
 int equals(const string* lhs, const char* rhs);
-void concat(string* dest, const string* src);
+void concat(string* dest, const char* src);
 string* substr(string* s, const u4 start, const u4 end);
+int find(string* s, char c);
+void free_str(string* s);
 
 typedef struct __list {
   u4 len;
