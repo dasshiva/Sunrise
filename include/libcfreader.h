@@ -102,6 +102,7 @@ typedef struct {
   list* attrs;
 } class;
 class* new_class(char* name);
+method* get_method(class* c, char* name, char* desc);
 
 #define PUB 0x0001
 #define PRIV 0x0002

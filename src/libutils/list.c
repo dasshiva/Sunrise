@@ -70,3 +70,20 @@ void delete(list* l, u4 index) {
     n = n->next;
   }
 }
+
+void* move(list* l, u4 index) {
+  if (l->len <= index) 
+    err("Accessing index %d when len is %d", index, l->len);
+  list* n = l;
+  for(u4 i = 0; i < index; i++) {
+    if (n->index == i) {
+      n->prev->next = n->next;
+      n->next->prev = n->prev;
+      void* data = n->data;
+      free(n);
+      l->len--;
+      return data;
+    }
+    n = n->next;
+  }
+}

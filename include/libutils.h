@@ -31,6 +31,7 @@ list* new_list(void);
 void add(list* l, void* data);
 void* get(list* l, u4 index);
 void delete(list* l, u4 index);
+void* move(list* l, u4 index);
 
 #define is_null(a) a == NULL
 void dbg(char* fmt, ...);

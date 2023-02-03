@@ -57,3 +57,12 @@ class* new_class(char* file) {
   c->attrs = init_attrs(h, c->cp, c->attrs_count);
   return c;
 }
+
+method* get_method(class* c, char* name, char* desc) {
+  for (u2 i = 0; i < c->mets_count; i++) {
+    method* m = get(c->methods, i);
+    if (equals(m->name, name) && equals(m->desc, desc)) 
+      return m;
+  }
+  return NULL;
+}

@@ -9,7 +9,8 @@ typedef enum {
   LONG,
   FLOAT,
   DOUBLE,
-  REF
+  REF,
+  EMPTY
 } Type;
 
 typedef struct {
@@ -17,11 +18,15 @@ typedef struct {
   void* data;
 } elem;
 
-typedef struct f{
+typedef struct {
   void* lvarray;
   method* mt;
   list* cp;
   list* stack;
 } frame;
+frame* new_frame(method* m, list* cp);
+void push(frame* f, void* data);
+void* pop(frame* f);
 
+#define code(a) a->attr.code
 #endif
