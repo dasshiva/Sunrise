@@ -16,6 +16,7 @@ u4 get_u4(handle* h);
 void skip(handle* h, u4 amt);
 
 #define UTF8 1 //  CONSTANT_Utf8
+#define INTEGER 3 // CONSTANT_Integer
 #define CLASS 7 // CONSTANT_Class
 #define STRING 8 // CONSTANT_String
 #define FIELD 9 // CONSTANT_FieldRef
@@ -32,6 +33,7 @@ typedef struct {
   u2 name;
   u2 desc;
 } ntype_elem;
+
 // Represents a field, method or interface method ref
 typedef struct {
   u2 class;
@@ -41,16 +43,18 @@ typedef struct {
 typedef struct {
   u1 tag;
   union {
-    utf8_elem* utf;
+    utf8_elem* utf;  // utf8 string
     mfiref_elem* mref; // method reference 
     mfiref_elem* fref; // field reference 
     mfiref_elem* iref; // interface method reference 
     u2 class; // index representing class name;
-    ntype_elem* nt;
+    ntype_elem* nt; // name type element
+    i4 integer;
   } elem;
 } pool_elem;
 
 list* new_cpool(handle* h, u2 len);
+pool_elem* get_elem(list* cpool, u2 index);
 string* get_utf8(list* pool, u2 index);
 
 typedef struct {

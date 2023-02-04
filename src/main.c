@@ -9,6 +9,7 @@ void handler(int signum) {
   exit(1);
 }
 int main(int argc, char* argv[]) {
+    GC_INIT();
     signal(SIGSEGV, &handler);
     class* c = get_class("Hello.class");
     frame* f = new_frame(get_method(c, "main", "()V"), c->cp);

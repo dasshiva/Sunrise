@@ -1,6 +1,7 @@
 #ifndef _LIBUTILS_H_
 #define _LIBUTILS_H_
 
+#include <gc.h>
 #include "types.h"
 #include <stdarg.h>
 
@@ -18,7 +19,6 @@ int equals(const string* lhs, const char* rhs);
 void concat(string* dest, const char* src);
 string* substr(string* s, const u4 start, const u4 end);
 int find(string* s, char c);
-void free_str(string* s);
 
 typedef struct __list {
   u4 len;
@@ -30,6 +30,7 @@ typedef struct __list {
 list* new_list(void);
 void add(list* l, void* data);
 void* get(list* l, u4 index);
+void set(list* l, u4 index, void* data);
 void delete(list* l, u4 index);
 void* move(list* l, u4 index);
 

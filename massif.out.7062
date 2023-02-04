@@ -1,0 +1,43 @@
+desc: (none)
+cmd: build/sun
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=3867075
+mem_heap_B=48
+mem_heap_extra_B=8
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=4992023
+mem_heap_B=56
+mem_heap_extra_B=24
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=5039469
+mem_heap_B=2807
+mem_heap_extra_B=33
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=4
+#-----------
+time=5040200
+mem_heap_B=6903
+mem_heap_extra_B=41
+mem_stacks_B=0
+heap_tree=empty

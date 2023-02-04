@@ -1,8 +1,6 @@
 public class Hello {
 	private static int length;
 	public static void main() {
-		for (;;) {
-		  break;
-		}
+		int a = 272729;
 	}
 }

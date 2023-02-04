@@ -1,9 +1,8 @@
 #include <include/libcfreader.h>
-#include <stdlib.h>
 
 class* new_class(char* file) {
   handle* h = open_file(file);
-  class* c = malloc(sizeof(class));
+  class* c = GC_MALLOC(sizeof(class));
   if (get_u4(h) != 0xCAFEBABE) 
     err("File %s has invalid magic", file);
   c->minor = get_u2(h);
@@ -22,7 +21,7 @@ class* new_class(char* file) {
   if (c->ints_count == 0)
     c->ints = NULL;
   else {
-    c->ints = malloc(sizeof(u2) * c->ints_count);
+    c->ints = GC_MALLOC(sizeof(u2) * c->ints_count);
     for (u2 i = 0; i < c->ints_count; i++) {
       c->ints[i] = get_u2(h);
     }
@@ -31,7 +30,7 @@ class* new_class(char* file) {
   dbg("Number of fields present - %d", c->fields_count);
   c->fields = (c->fields_count == 0) ? NULL : new_list();
   for (u2 i = 0; i < c->fields_count; i++) {
-    field* f = malloc(sizeof(field));
+    field* f = GC_MALLOC(sizeof(field));
     f->flags = get_u2(h);
     f->name = get_utf8(c->cp, get_u2(h));
     f->desc = get_utf8(c->cp, get_u2(h));
@@ -44,7 +43,7 @@ class* new_class(char* file) {
   dbg("Number of methods declared %d", c->mets_count);
   c->methods = new_list();
   for (u2 i = 0; i < c->mets_count; i++) {
-    method* m = malloc(sizeof(method));
+    method* m = GC_MALLOC(sizeof(method));
     m->flags = get_u2(h);
     m->name = get_utf8(c->cp, get_u2(h));
     m->desc = get_utf8(c->cp, get_u2(h));

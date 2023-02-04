@@ -1,13 +1,11 @@
 #include <include/libutils.h>
-#include <stdlib.h>
-#include <sys/types.h>
 #include <string.h>
 
 string* new_str(const char* str) {
-  string* s = malloc(sizeof(string));
+  string* s = GC_MALLOC(sizeof(string));
   s->len = strlen(str);
   s->cap = s->len + 20;
-  s->buf = malloc(sizeof(char) * s->cap);
+  s->buf = GC_MALLOC(sizeof(char) * s->cap);
   strcpy(s->buf, str);
   s->buf[s->len] = '\0';
   return s;
@@ -20,13 +18,13 @@ string* new_empty_str(void) {
 string* str_with_len(u4 len) {
   string* s = new_empty_str();
   if (s->cap > len) 
-    s->buf = realloc(s->buf, len);
+    s->buf = GC_REALLOC(s->buf, len);
   return s;
 }
 
 void append(string* s, char c) {
   if (s->len == s->cap) {
-    s->buf = realloc(s->buf, s->cap + 20);
+    s->buf = GC_REALLOC(s->buf, s->cap + 20);
     s->cap += 20;
   }
   s->buf[s->len] = c;
@@ -52,7 +50,7 @@ void concat(string* dest, const char* src) {
   int len = strlen(src);
   if (dest->cap + 1 < dest->len + len) {
     dest->cap = dest->len + len + 20;
-    dest->buf = realloc(dest->buf, dest->cap);
+    dest->buf = GC_REALLOC(dest->buf, dest->cap);
   }
   strcat(dest->buf, src);
   dest->len += len;
@@ -62,10 +60,10 @@ void concat(string* dest, const char* src) {
 string* substr(string* s, const u4 start, const u4 end) {
   if (start >= end) 
     err("Trying to extract sub string when start index(%d) is more than end index(%d)", start, end);
-  string* str = malloc(sizeof(string));
+  string* str = GC_MALLOC(sizeof(string));
   str->len = end - start;
   str->cap = str->len + 20;
-  str->buf = malloc(sizeof(char) * str->cap);
+  str->buf = GC_MALLOC(sizeof(char) * str->cap);
   for (u4 i = start, j = 0; i < end; i++, j++) {
     str->buf[j] = s->buf[i];
   }
@@ -85,9 +83,4 @@ int find(string* s, char c) {
     }
   }
   return -1;
-}
-
-void free_str(string* s) {
-  free(s->buf);
-  free(s);
 }

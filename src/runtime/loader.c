@@ -21,11 +21,8 @@ static int is_loaded(string* name) {
   int dot = find(name, '.');
   string* subs = substr(name, 0, (dot == -1) ? name->len : (u4) dot);
   for (u4 i = 0; i < classes->len; i++) {
-    if (equals(((class*) get(classes, i))->this_class, subs->buf)) {
-      free_str(subs);
+    if (equals(((class*) get(classes, i))->this_class, subs->buf))
       return i;
-    }
   }
-  free_str(subs);
   return -1;
 }

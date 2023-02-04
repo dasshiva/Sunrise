@@ -1,8 +1,7 @@
 #include <include/libutils.h>
-#include <stdlib.h>
 
 list* new_list(void) {
-  list* l = malloc(sizeof(list));
+  list* l = GC_MALLOC(sizeof(list));
   l->len = 0;
   l->index = 0;
   l->data = NULL;
@@ -22,7 +21,7 @@ static list* get_last(const list* l) {
 }
  
 static void get_next(list* l) {
-  l->next = malloc(sizeof(list));
+  l->next = GC_MALLOC(sizeof(list));
   l->next->index = l->index + 1;
   l->next->prev = l->next;
   l->next->next = NULL;
@@ -63,8 +62,6 @@ void delete(list* l, u4 index) {
     if (n->index == i) {
       n->prev->next = n->next;
       n->next->prev = n->prev;
-      free(n->data);
-      free(n);
       return;
     }
     n = n->next;
@@ -80,10 +77,22 @@ void* move(list* l, u4 index) {
       n->prev->next = n->next;
       n->next->prev = n->prev;
       void* data = n->data;
-      free(n);
       l->len--;
       return data;
     }
     n = n->next;
   }
+}
+
+void set(list* l, u4 index, void* data) {
+   if (l->len <= index) 
+    err("Accessing index %d when len is %d", index, l->len);
+   list* n = l;
+   for(u4 i = 0; i < index; i++) {
+     if (n->index == i) {
+       n->data = data;
+       return;
+     }
+     n = n->next;
+   }
 }

@@ -13,7 +13,33 @@ void exec(frame* f) {
   u4 len = code(code_attr).code_len;
   for (u4 pc = 0; pc < len; ) {
     switch (safe_get(code, pc, len)) {
-      case 167: {
+      case 18: { // ldc
+        u2 index = safe_get(code, ++pc, len);
+        pool_elem* p = get_elem(f->cp, index);
+        switch (p->tag) {
+          case INTEGER: {
+            elem* e = GC_MALLOC(sizeof(elem));
+            e->t = INT;
+            e->data.integer = p->elem.integer;
+            push (f, e);
+            break;
+          }
+        }
+        break;
+      }
+      // istore_<n>
+      case 59:
+      case 60:
+      case 61:
+      case 62: {
+        u1 delta = code[pc] - 59;
+        elem* e = get(f->stack, 0);
+        if (e->t != INT) 
+          err("istore_<%d> used but stack top is not int", delta);
+        set(f->lvarray, delta, e);
+        break;
+      }
+      case 167: { // goto
         pc++;
         u2 byte1 = safe_get(code, pc, len);
         pc++;
@@ -24,7 +50,7 @@ void exec(frame* f) {
         pc = offset;
         continue;
       }
-      case 177: break;
+      case 177: break; // return
       default: err("Unrecognised or unimplemented opcode %d", code[pc]);
     }
     pc++;

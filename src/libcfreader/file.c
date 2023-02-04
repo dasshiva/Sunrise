@@ -1,6 +1,6 @@
 #include <include/libcfreader.h>
 #include <include/libutils.h>
-#include <stdlib.h>
+#include <stdio.h>
 
 #define CHECK(h) \
   if (h->pos == h->size) \
@@ -14,12 +14,11 @@ handle* open_file(char* name) {
   FILE* f = fopen(temp->buf, "rb");
   if (f == NULL) 
     err("Could not read file %s", temp->buf);
-  free_str(temp);
   fseek(f, 0, SEEK_END);
   u8 size = ftell(f);
   fseek(f, 0, SEEK_SET);
-  handle* h = malloc(sizeof(handle));
-  h->data = malloc(sizeof(u1) * size);
+  handle* h = GC_MALLOC(sizeof(handle));
+  h->data = GC_MALLOC(sizeof(u1) * size);
   fread(h->data, sizeof(u1), size, f);
   h->size = size;
   h->pos = 0;

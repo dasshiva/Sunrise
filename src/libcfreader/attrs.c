@@ -1,12 +1,11 @@
 #include <include/libcfreader.h>
-#include <stdlib.h>
 
 list* init_attrs(handle* h, list* cpool, u2 len) {
   if (len == 0) 
     return NULL;
   list* p = new_list();
   for (u2 i = 0; i < len; i++) {
-    attrs* at = malloc(sizeof(attrs));
+    attrs* at = GC_MALLOC(sizeof(attrs));
     at->name = get_utf8(cpool, get_u2(h));
     if (equals(at->name, "ConstantValue")) {
       skip(h, 4);
@@ -20,13 +19,13 @@ list* init_attrs(handle* h, list* cpool, u2 len) {
       at->attr.code.stack = get_u2(h);
       at->attr.code.locals = get_u2(h);
       at->attr.code.code_len = get_u4(h);
-      at->attr.code.exec = malloc(sizeof(u1) * at->attr.code.code_len);
+      at->attr.code.exec = GC_MALLOC(sizeof(u1) * at->attr.code.code_len);
       for (u4 i = 0; i < at->attr.code.code_len; i++) {
         at->attr.code.exec[i] = get_u1(h);
       }
       at->attr.code.etable_len = get_u2(h);
       if (at->attr.code.etable_len != 0) {
-        at->attr.code.etable = malloc(sizeof(at->attr.code.etable) * at->attr.code.etable_len);
+        at->attr.code.etable = GC_MALLOC(sizeof(at->attr.code.etable) * at->attr.code.etable_len);
         for (u4 i = 0; i < at->attr.code.etable_len; i++) {
           at->attr.code.etable[i].start_pc = get_u2(h);
           at->attr.code.etable[i].end_pc = get_u2(h);
@@ -50,7 +49,6 @@ list* init_attrs(handle* h, list* cpool, u2 len) {
     else {
       skip(h, get_u4(h));
       dbg("Attribute %s not supported. Skipping", at->name->buf);
-      free(at);
     }
   }
   return p;

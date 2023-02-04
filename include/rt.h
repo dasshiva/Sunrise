@@ -13,9 +13,14 @@ typedef enum {
   EMPTY
 } Type;
 
+typedef union {
+  i4 integer;
+  
+} elem_val;
+
 typedef struct {
   Type t;
-  void* data;
+  elem_val data;
 } elem;
 
 typedef struct {
@@ -25,7 +30,7 @@ typedef struct {
   list* stack;
 } frame;
 frame* new_frame(method* m, list* cp);
-void push(frame* f, void* data);
+void push(frame* f, elem* data);
 void* pop(frame* f);
 
 #define code(a) a->attr.code

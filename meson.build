@@ -6,5 +6,7 @@ libutilssrc = ['src/libutils/string.c', 'src/libutils/list.c', 'src/libutils/log
 libutils = static_library('libutils', libutilssrc)
 libcfreadersrc = ['src/libcfreader/file.c', 'src/libcfreader/class.c', 'src/libcfreader/cpool.c', 'src/libcfreader/attrs.c']
 libcfreader = static_library('libcfreader', libcfreadersrc)
-exe = executable('sun', src, include_directories: 'include/', link_with: [libutils , libcfreader], link_args: '-lexecinfo')
+c = meson.get_compiler('c')
+gc = c.find_library('gc', required : true)
+exe = executable('sun', src, include_directories: 'include/', link_with: [libutils , libcfreader], dependencies: gc)
 test('basic', exe)

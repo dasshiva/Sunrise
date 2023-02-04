@@ -4,11 +4,11 @@
 frame* new_frame(method* m, list* cp) {
   if (is(m, NATIVE)) 
     return NULL;
-  frame* f = malloc(sizeof(frame));
+  frame* f = GC_MALLOC(sizeof(frame));
   f->lvarray = new_list();
   attrs* at = get(m->attrs, 0);
   for (u2 i = 0; i < code(at).locals; i++) {
-    elem* e = malloc(sizeof(elem));
+    elem* e = GC_MALLOC(sizeof(elem));
     e->t = EMPTY;
     add(f->lvarray, e);
   }
@@ -18,7 +18,7 @@ frame* new_frame(method* m, list* cp) {
   return f;
 }
 
-void push(frame* f, void* data) {
+void push(frame* f, elem* data) {
   attrs* c = get(f->mt->attrs, 0);
   if (f->stack->len == code(c).stack) 
     err("Stack overflow while executing method %s%s", f->mt->name->buf, f->mt->desc->buf);
