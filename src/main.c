@@ -12,6 +12,6 @@ int main(int argc, char* argv[]) {
     signal(SIGSEGV, &handler);
     class* c = get_class("Hello.class");
     frame* f = new_frame(get_method(c, "main", "()V"), c->cp);
-    
+    exec(f);
     return 0;
 }

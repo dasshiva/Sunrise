@@ -17,5 +17,6 @@ void err(char* fmt, ...) {
   va_start(arg, fmt);
   vfprintf(stderr, fmt, arg);
   va_end(arg);
+  fputs("\n", stderr);
   exit(1);
 }
