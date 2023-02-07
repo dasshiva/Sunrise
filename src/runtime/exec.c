@@ -24,6 +24,13 @@ void exec(frame* f) {
             push (f, e);
             break;
           }
+          case FLT: {
+            elem* e = GC_MALLOC(sizeof(elem));
+            e->t = FLOAT;
+            e->data.flt = p->elem.flt;
+            push(f, e);
+            break;
+          }
         }
         break;
       }
@@ -33,9 +40,21 @@ void exec(frame* f) {
       case 61:
       case 62: {
         u1 delta = code[pc] - 59;
-        elem* e = get(f->stack, 0);
+        elem* e = pop(f);
         if (e->t != INT) 
           err("istore_<%d> used but stack top is not int", delta);
+        set(f->lvarray, delta, e);
+        break;
+      }
+      // fstore_<n>
+      case 67:
+      case 68:
+      case 69:
+      case 70: {
+        u1 delta = code[pc] - 67;
+        elem* e = pop(f);
+        if (e->t != FLOAT) 
+          err("fstore_<%d> used but stack top is not float", delta);
         set(f->lvarray, delta, e);
         break;
       }

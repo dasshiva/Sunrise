@@ -58,28 +58,16 @@ void delete(list* l, u4 index) {
     return;
   }
   list* n = l;
-  for(u4 i = 0; i < index; i++) {
-    if (n->index == i) {
-      n->prev->next = n->next;
-      n->next->prev = n->prev;
-      return;
-    }
-    n = n->next;
-  }
-}
-
-void* move(list* l, u4 index) {
-  if (l->len <= index) 
-    err("Accessing index %d when len is %d", index, l->len);
-  list* n = l;
-  for(u4 i = 0; i < index; i++) {
-    if (n->index == i) {
-      n->prev->next = n->next;
-      n->next->prev = n->prev;
-      void* data = n->data;
+  for(u4 i = 0; i < l->len; i++) {
+    if (n->index == index) {
+      if (n->prev != NULL)
+        n->prev->next = n->next;
+      if (n->next != NULL)
+        n->next->prev = n->prev;
+      n->data = NULL;
       l->len--;
-      return data;
-    }
+      return;
+   }
     n = n->next;
   }
 }

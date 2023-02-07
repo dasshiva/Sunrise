@@ -17,12 +17,15 @@ void skip(handle* h, u4 amt);
 
 #define UTF8 1 //  CONSTANT_Utf8
 #define INTEGER 3 // CONSTANT_Integer
+#define FLT 4 // CONSTANT_Float
+#define LNG 5 // CONSTANT_Long 
 #define CLASS 7 // CONSTANT_Class
 #define STRING 8 // CONSTANT_String
 #define FIELD 9 // CONSTANT_FieldRef
 #define MREF 10 // CONSTANT_MethodRef
 #define NTYPE 12 // CONSTANT_NameAndType
 #define MTYPE 16 // CONSTANT_MethodType
+#define EMP 20 // This is for empty elements such as the element after a long or double in the constant pool
 
 typedef struct {
   u2 length;
@@ -49,7 +52,9 @@ typedef struct {
     mfiref_elem* iref; // interface method reference 
     u2 class; // index representing class name;
     ntype_elem* nt; // name type element
-    i4 integer;
+    i4 integer; // int element
+    i8 lng; // long element
+    float flt; // float element;
   } elem;
 } pool_elem;
 

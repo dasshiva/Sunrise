@@ -8,5 +8,6 @@ libcfreadersrc = ['src/libcfreader/file.c', 'src/libcfreader/class.c', 'src/libc
 libcfreader = static_library('libcfreader', libcfreadersrc)
 c = meson.get_compiler('c')
 gc = c.find_library('gc', required : true)
-exe = executable('sun', src, include_directories: 'include/', link_with: [libutils , libcfreader], dependencies: gc)
+math = c.find_library('m', required : true)
+exe = executable('sun', src, include_directories: 'include/', link_with: [libutils , libcfreader], dependencies: [gc, math])
 test('basic', exe)

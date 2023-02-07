@@ -28,5 +28,7 @@ void push(frame* f, elem* data) {
 void* pop(frame* f) {
   if (f->stack->len == 0)
     err("Stack underflow while executing method %s%s", f->mt->name->buf, f->mt->desc->buf);
-  return move(f->stack, f->stack->len - 1);
+  void* el = get(f->stack, f->stack->len - 1);
+  delete(f->stack, f->stack->len - 1);
+  return el;
 }
