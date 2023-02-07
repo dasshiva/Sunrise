@@ -120,6 +120,21 @@ void exec(frame* f) {
         set(f->lvarray, delta, e);
         break;
       }
+      // dup
+      case 89: {
+        elem* e = get(f->stack, f->stack->len - 1);
+        elem* new = GC_MALLOC(sizeof(elem));
+        new->t = e->t;
+        switch (e->t) {
+          case INT: new->data.integer = e->data.integer; break;
+          case FLOAT: new->data.flt = e->data.flt; break;
+          case LONG: new->data.lng = e->data.lng; break;
+          case DOUBLE: new->data.dbl = e->data.dbl; break;
+          case REF: new->data.ref = e->data.ref; break;
+        }
+        push(f, new);
+        break;
+      }
       case 167: { // goto
         i2 offset;
         make(offset);
@@ -136,7 +151,10 @@ void exec(frame* f) {
         if (pe->tag != CLASS) 
           err("new used but index does not point to valid constant pool class ref");
         class* c = get_class(get_utf8(f->cp, pe->elem.class)->buf);
-        
+        elem* e = GC_MALLOC(sizeof(elem));
+        e->t = REF;
+        e->data.ref = new_obj(c);
+        push(f, e);
         break;
       }
       default: err("Unrecognised or unimplemented opcode %d", code[pc]);

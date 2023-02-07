@@ -1,5 +1,72 @@
 #include <include/libcfreader.h>
 
+static void init_field(list* cp, field* f) {
+  if (f->attrs == NULL) {
+    if (is(f, STAT)) {
+      f->check_val = 1;
+      field_init(f);
+    }
+    else {
+      f->check_val = 0;
+    }
+  }
+  else {
+    f->check_val = 1;
+    attrs* a = get(f->attrs, 0);
+    pool_elem* pe = get_elem(cp, a->attr.const_val);
+    switch(f->desc->buf[0]) { 
+      case 'B' : {
+        if(pe->tag != INTEGER) 
+         err("ConstantValue has to be CONSTANT_Integer for byte field %s", f->name->buf);
+        f->val.byte = pe->elem.integer;
+        break;
+      }
+      case 'C' : {
+        if(pe->tag != INTEGER) 
+         err("ConstantValue has to be CONSTANT_Integer for char field %s", f->name->buf);
+        f->val.chr = pe->elem.integer;
+        break;
+      }
+      case 'I' : {
+        if(pe->tag != INTEGER) 
+         err("ConstantValue has to be CONSTANT_Integer for int field %s", f->name->buf);
+        f->val.integer = pe->elem.integer;
+        break;
+      }
+      case 'S' : {
+        if(pe->tag != INTEGER) 
+         err("ConstantValue has to be CONSTANT_Integer for byte field %s", f->name->buf);
+        f->val.sht = pe->elem.integer;
+        break;
+      }
+      case 'Z' : {
+       if(pe->tag != INTEGER) 
+         err("ConstantValue has to be CONSTANT_Integer for boolean field %s", f->name->buf);
+        f->val.bool = pe->elem.integer;
+        break;
+      }
+      case 'D' : {
+        if(pe->tag != DBL) 
+         err("ConstantValue has to be CONSTANT_Integer for double field %s", f->name->buf);
+        f->val.dbl = pe->elem.dbl;
+        break;
+      }
+      case 'F' : {
+        if(pe->tag != FLT) 
+         err("ConstantValue has to be CONSTANT_Integer for float field %s", f->name->buf);
+        f->val.flt = pe->elem.flt;
+        break;
+      }
+      case 'J' : {
+       if(pe->tag != LNG) 
+         err("ConstantValue has to be CONSTANT_Integer for boolean field %s", f->name->buf);
+        f->val.byte = pe->elem.integer;
+        break;
+      }
+   }
+  }
+}
+
 class* new_class(char* file) {
   handle* h = open_file(file);
   class* c = GC_MALLOC(sizeof(class));
@@ -35,8 +102,9 @@ class* new_class(char* file) {
     f->name = get_utf8(c->cp, get_u2(h));
     f->desc = get_utf8(c->cp, get_u2(h));
     f->attrs_count = get_u2(h);
-    dbg("Found field %s with signature %s and %d attributes", f->name->buf, f->desc->buf, f->attrs_count);
+    dbg("Found field %s with descriptor %s and %d attributes", f->name->buf, f->desc->buf, f->attrs_count);
     f->attrs = init_attrs(h, c->cp, f->attrs_count);
+    init_field(c->cp, f);
     add(c->fields, f);
   }
   c->mets_count = get_u2(h);
@@ -48,7 +116,7 @@ class* new_class(char* file) {
     m->name = get_utf8(c->cp, get_u2(h));
     m->desc = get_utf8(c->cp, get_u2(h));
     m->attrs_count = get_u2(h);
-    dbg("Found method %s with signature %s and %d attributes", m->name->buf, m->desc->buf, m->attrs_count);
+    dbg("Found method %s with descriptor %s and %d attributes", m->name->buf, m->desc->buf, m->attrs_count);
     m->attrs = init_attrs(h, c->cp, m->attrs_count);
     add(c->methods, m);
   }

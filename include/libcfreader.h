@@ -90,10 +90,29 @@ typedef struct {
   u2 flags;
   string* name;
   string* desc;
+  u1 check_val;
+  union {
+    i1 byte;
+    i2 sht;
+    i2 chr;
+    i4 integer;
+    i8 lng;
+    float flt;
+    double dbl;
+    void* refer;
+    u1 bool;
+  } val;
   u2 attrs_count;
   list* attrs;
 } field;
-typedef field method;
+
+typedef struct {
+  u2 flags;
+  string* name;
+  string* desc;
+  u2 attrs_count;
+  list* attrs;
+} method;
 
 typedef struct {
   u2 minor;
@@ -131,4 +150,16 @@ method* get_method(class* c, char* name, char* desc);
 #define ENUM 0x4000
 
 #define is(c, f) ((c->flags & f) != 0)
+#define field_init(f) \
+switch(f->desc->buf[0]) { \
+        case 'B' : f->val.byte = 0; break; \
+        case 'C' : f->val.chr = 0; break; \
+        case 'D' : f->val.flt = 0.0f; break; \
+        case 'F' : f->val.dbl = 0.0; break; \ 
+        case 'I' : f->val.integer = 0; break; \
+        case 'J' : f->val.lng = 0; break; \
+        case 'S' : f->val.sht = 0; break; \
+        case 'Z' : f->val.bool = 0; break; \
+        default: f->val.refer = NULL; \
+      }
 #endif
