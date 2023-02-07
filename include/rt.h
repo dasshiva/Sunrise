@@ -16,6 +16,8 @@ typedef enum {
 typedef union {
   i4 integer;
   float flt;
+  i8 lng;
+  double dbl;
 } elem_val;
 
 typedef struct {

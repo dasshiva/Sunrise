@@ -44,9 +44,9 @@ list* new_cpool(handle* h, u2 len) {
           pelem->elem.flt = NAN;
         else {
           i4 bits = (i4) bytes;
-          int s = ((bits >> 31) == 0) ? 1 : -1;
-          int e = ((bits >> 23) & 0xff);
-          int m = (e == 0) ? (bits & 0x7fffff) << 1 : (bits & 0x7fffff) | 0x800000;
+          i4 s = ((bits >> 31) == 0) ? 1 : -1;
+          i4 e = ((bits >> 23) & 0xff);
+          i4 m = (e == 0) ? (bits & 0x7fffff) << 1 : (bits & 0x7fffff) | 0x800000;
           pelem->elem.flt = s * m * pow(2, e - 150);
         }
         dbg("Float content %f", pelem->elem.flt);
@@ -57,6 +57,27 @@ list* new_cpool(handle* h, u2 len) {
         u4 low = get_u4(h);
         pelem->elem.lng = ((i8)high << 32) + low;
         dbg("Long content %li", pelem->elem.lng);
+        add_empty = 1;
+        i++;
+        break;
+      }
+      case DBL: {
+        u4 high = get_u4(h);
+        u4 low = get_u4(h);
+        i8 bits = ((i8)high << 32) + low;
+        if (bits == 0x7ff0000000000000L)
+          pelem->elem.dbl = INFINITY;
+        else if (bits == 0xfff0000000000000L)
+          pelem->elem.dbl = -INFINITY;
+        else if ((0x7ff0000000000001L <= bits && bits >= 0x7fffffffffffffffL) || (0xfff0000000000001L <= bits && bits >= 0xffffffffffffffffL))
+          pelem->elem.dbl = NAN;
+        else {
+          i4 s = ((bits >> 63) == 0) ? 1 : -1;
+          i4 e = (int)((bits >> 52) & 0x7ffL); 
+          i8 m = (e == 0) ? (bits & 0xfffffffffffffL) << 1 : (bits  & 0xfffffffffffffL) | 0x10000000000000L;
+          pelem->elem.dbl = s * m * pow(2, e - 1075);
+          dbg("Double content %lf", pelem->elem.dbl);
+        }
         add_empty = 1;
         i++;
         break;

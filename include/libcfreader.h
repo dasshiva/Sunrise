@@ -19,6 +19,7 @@ void skip(handle* h, u4 amt);
 #define INTEGER 3 // CONSTANT_Integer
 #define FLT 4 // CONSTANT_Float
 #define LNG 5 // CONSTANT_Long 
+#define DBL 6 // CONSTANT_Double
 #define CLASS 7 // CONSTANT_Class
 #define STRING 8 // CONSTANT_String
 #define FIELD 9 // CONSTANT_FieldRef
@@ -50,11 +51,12 @@ typedef struct {
     mfiref_elem* mref; // method reference 
     mfiref_elem* fref; // field reference 
     mfiref_elem* iref; // interface method reference 
-    u2 class; // index representing class name;
+    u2 class; // index representing class name
     ntype_elem* nt; // name type element
     i4 integer; // int element
     i8 lng; // long element
-    float flt; // float element;
+    float flt; // float element
+    double dbl; // double element 
   } elem;
 } pool_elem;
 
