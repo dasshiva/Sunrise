@@ -144,6 +144,10 @@ void exec(frame* f) {
         continue;
       }
       case 177: break; // return
+      case 183: {
+        
+        err("invokespecial is not implemented");
+      }
       case 187: { // new
         u2 index;
         make(index);
