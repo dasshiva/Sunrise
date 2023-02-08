@@ -1,4 +1,4 @@
-project('sunrise', 'c',
+project('sunrise', ['c', 'java'],
   version : '0.1',
   default_options : ['warning_level=3'])
 src = ['src/main.c', 'src/runtime/loader.c', 'src/runtime/frame.c', 'src/runtime/exec.c', 'src/runtime/ref.c']
@@ -10,4 +10,7 @@ c = meson.get_compiler('c')
 gc = c.find_library('gc', required : true)
 math = c.find_library('m', required : true)
 exe = executable('sun', src, include_directories: 'include/', link_with: [libutils , libcfreader], dependencies: [gc, math])
+syslib = ['syslib/VMObj.java']
+java = jar('syslib', syslib)
 test('basic', exe)
+
