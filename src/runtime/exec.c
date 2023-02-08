@@ -61,6 +61,18 @@ void exec(frame* f) {
         }
         break;
       }
+      // aload_<n>
+      case 42:
+      case 43:
+      case 44:
+      case 45: {
+        u1 delta = code[pc] - 42;
+        elem* e = get(f->lvarray, delta);
+        if (e->t != REF) 
+          err("aload_<%d> used but element at index %d is not a rreference", delta, delta);
+        push(f, e);
+        break;
+      }
       // dstore
       case 57: {
         u1 delta = safe_get(code, ++pc, len);
@@ -145,8 +157,26 @@ void exec(frame* f) {
       }
       case 177: break; // return
       case 183: {
-        
-        err("invokespecial is not implemented");
+        u2 index;
+        make(index);
+        pool_elem* pe = get_elem(f->cp, index);
+        if (pe->tag != MREF) 
+          err("invokespecial used but element at index is not a method reference");
+        mfiref_elem* mref = pe->elem.mref;
+        pool_elem* cl = get_elem(f->cp, mref->class);
+        if (cl->tag != CLASS) 
+          err("class index of method ref does not point to valid class");
+        class* c = get_class(get_utf8(f->cp, cl->elem.class)->buf);
+        pool_elem* nt = get_elem(f->cp, mref->nt);
+        if (nt->tag != NTYPE) 
+          err("name type index of method ref does not point to valid name type structure");
+        ntype_elem* nte = nt->elem.nt;
+        method* m = get_method(c, get_utf8(c->cp, nte->name)->buf, get_utf8(c->cp, nte->desc)->buf);
+        frame* mt = new_frame(m, c->cp);
+        elem* ref = pop(f);
+        set(mt->lvarray, 0, ref);
+        exec(mt);
+        break;
       }
       case 187: { // new
         u2 index;

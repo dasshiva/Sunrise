@@ -35,7 +35,7 @@ typedef struct {
 } elem;
 
 typedef struct {
-  void* lvarray;
+  list* lvarray;
   method* mt;
   list* cp;
   list* stack;
