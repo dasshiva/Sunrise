@@ -83,7 +83,7 @@ class* new_class(char* file) {
   dbg("This class - %s", c->this_class->buf);
   u2 super = get_u2(h);
   if (super != 0) {
-    c->super_class = get_utf8(c->cp, get_u2(h));
+    c->super_class = get_utf8(c->cp, super);
     dbg("Super class - %s", c->super_class->buf);
   }
   else 
