@@ -81,8 +81,13 @@ class* new_class(char* file) {
   c->flags = get_u2(h);
   c->this_class = get_utf8(c->cp, get_u2(h));
   dbg("This class - %s", c->this_class->buf);
-  c->super_class = get_utf8(c->cp, get_u2(h));
-  dbg("Super class - %s", c->super_class->buf);
+  u2 super = get_u2(h);
+  if (super != 0) {
+    c->super_class = get_utf8(c->cp, get_u2(h));
+    dbg("Super class - %s", c->super_class->buf);
+  }
+  else 
+    c->super_class = NULL;
   c->ints_count = get_u2(h);
   dbg("Number of interfaces implemented - %d", c->ints_count);
   if (c->ints_count == 0)

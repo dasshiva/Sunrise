@@ -11,8 +11,11 @@ void handler(int signum) {
 int main(int argc, char* argv[]) {
     GC_INIT();
     signal(SIGSEGV, &handler);
-    class* c = get_class("Hello.class");
-    frame* f = new_frame(get_method(c, "main", "()V"), c->cp);
+    class* c = get_class(argv[1]);
+    method* m = get_method(c, "main","()V");
+    if (m == NULL) 
+      err ("Method main not found");
+    frame* f = new_frame(m, c->cp);
     exec(f);
     return 0;
 }
