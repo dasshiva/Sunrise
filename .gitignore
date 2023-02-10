@@ -2,3 +2,4 @@ build/**
 syslib/*.class
 Hello.class
 syslib.jar
+sun

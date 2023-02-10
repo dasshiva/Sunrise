@@ -11,5 +11,8 @@ do
 done
 rm syslib/Make.class
 jar cf syslib.jar syslib/*.class
+mv build/sun .
+./sun -h
+echo "Successfully built Sunrise!"
 
 
