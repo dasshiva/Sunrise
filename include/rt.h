@@ -4,6 +4,8 @@
 #include "libcfreader.h"
 
 class* get_class(char* file);
+int load_jar(char* file);
+
 typedef enum {
   INT,
   LONG,

@@ -26,7 +26,6 @@ int main(int argc, char* argv[]) {
     GC_INIT();
     signal(SIGSEGV, &handler);
     app = GC_MALLOC(sizeof(config));
-    app->debug = -1;
     struct argparse_option opts[] = {
       OPT_HELP(),
       OPT_STRING('s', "syslib", &app->syslib, "Specify syslib.jar location (Default is current directory)", NULL, 0, 0),
@@ -46,6 +45,7 @@ int main(int argc, char* argv[]) {
       err("Main class name needed");
     }
     default_init(app);
+    load_jar(app->syslib);
     class* c = get_class(argv[argc - 1]);
     method* m = get_method(c, "main","()V");
     if (m == NULL) 

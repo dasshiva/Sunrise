@@ -36,7 +36,10 @@ void set(list* l, u4 index, void* data);
 void delete(list* l, u4 index);
 void* move(list* l, u4 index);
 
-#define is_null(a) a == NULL
+#define if_null(val, action) \
+  if (val == NULL) \
+  action;
+#define is_null(val) (val == NULL)
 void dbg(char* fmt, ...);
 void err(char* fmt, ...);
 

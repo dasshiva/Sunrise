@@ -100,9 +100,10 @@ int ends_with(const string* s, const char* str) {
   int len = strlen(str);
   if (len > s->len)
     return 0;
-  for (int i = len - 1; i > 0; i--) {
-    if (s->buf[i] != str[i])
+  for (int i = len - 1, j = s->len - 1; i > 0; i--, j--) {
+    if (s->buf[j] != str[i]) {
       return 0;
+    }
   }
   return 1;
 }

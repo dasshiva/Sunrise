@@ -69,9 +69,16 @@ static void init_field(list* cp, field* f) {
 
 class* new_class(char* file) {
   handle* h = open_file(file);
+  if (h == NULL)
+    err("Class %s not found", file);
+  dbg("Found class %s. Loading class", file);
+  return new_class_from_handle(h);
+}
+
+class* new_class_from_handle(handle* h) {
   class* c = GC_MALLOC(sizeof(class));
   if (get_u4(h) != 0xCAFEBABE) 
-    err("File %s has invalid magic", file);
+    err("File has invalid magic");
   c->minor = get_u2(h);
   c->major = get_u2(h);
   dbg("Running class file version %d.%d", c->major, c->minor);

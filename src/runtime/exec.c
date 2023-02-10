@@ -171,7 +171,8 @@ void exec(frame* f) {
         if (nt->tag != NTYPE) 
           err("name type index of method ref does not point to valid name type structure");
         ntype_elem* nte = nt->elem.nt;
-        method* m = get_method(c, get_utf8(c->cp, nte->name)->buf, get_utf8(c->cp, nte->desc)->buf);
+        method* m = get_method(c, get_utf8(f->cp, nte->name)->buf, get_utf8(f->cp, nte->desc)->buf);
+        dbg("Here");
         frame* mt = new_frame(m, c->cp);
         elem* ref = pop(f);
         set(mt->lvarray, 0, ref);

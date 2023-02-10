@@ -132,6 +132,7 @@ typedef struct {
   list* attrs;
 } class;
 class* new_class(char* name);
+class* new_class_from_handle(handle* h);
 method* get_method(class* c, char* name, char* desc);
 
 #define PUB 0x0001
