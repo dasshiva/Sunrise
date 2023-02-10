@@ -1,11 +1,11 @@
 #include <include/rt.h>
-#include <include/log.h>
+#include <include/libutils.h>
 #include <include/config.h>
-#include <zip.h>
+#include <include/zip.h>
 
 static list* classes = NULL;
 static int is_loaded(string* name);
-static const char const* syslib[][] = {
+char* syslib[][] = {
   { "java/lang/Object" }, 
   { "syslib/VMObj" }
 };
@@ -28,6 +28,7 @@ int load_syslib(char* file) {
   for (int i = 0; i < total; i++) {
     zip_entry_openbyindex(zip, i);
     string* name = new_str(zip_entry_name(zip));
+    dbg("%s", name);
   }
   return 0;
 }
