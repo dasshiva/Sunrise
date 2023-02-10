@@ -19,6 +19,8 @@ int equals(const string* lhs, const char* rhs);
 void concat(string* dest, const char* src);
 string* substr(string* s, const u4 start, const u4 end);
 int find(string* s, char c);
+int starts_with(const string* s, const char* str);
+int ends_with(const string* s, const char* str);
 
 typedef struct __list {
   u4 len;

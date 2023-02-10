@@ -84,3 +84,25 @@ int find(string* s, char c) {
   }
   return -1;
 }
+
+int starts_with(const string* s, const char* str) {
+  int len = strlen(str);
+  if (len > s->len)
+    return 0;
+  for (int i = 0; i < len; i++) {
+    if (s->buf[i] != str[i])
+      return 0;
+  }
+  return 1;
+}
+
+int ends_with(const string* s, const char* str) {
+  int len = strlen(str);
+  if (len > s->len)
+    return 0;
+  for (int i = len - 1; i > 0; i--) {
+    if (s->buf[i] != str[i])
+      return 0;
+  }
+  return 1;
+}

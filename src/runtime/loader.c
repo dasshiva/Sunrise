@@ -1,7 +1,14 @@
 #include <include/rt.h>
+#include <include/log.h>
+#include <include/config.h>
+#include <zip.h>
 
 static list* classes = NULL;
 static int is_loaded(string* name);
+static const char const* syslib[][] = {
+  { "java/lang/Object" }, 
+  { "syslib/VMObj" }
+};
 
 class* get_class(char* file) {
   if (!classes) {
@@ -13,6 +20,16 @@ class* get_class(char* file) {
   class* c = new_class(file);
   add(classes, c);
   return get(classes, classes->len - 1);
+}
+
+int load_syslib(char* file) {
+  struct zip_t *zip = zip_open(file, ZIP_DEFAULT_COMPRESSION_LEVEL, 'r');
+  int total = zip_entry_total(zip);
+  for (int i = 0; i < total; i++) {
+    zip_entry_openbyindex(zip, i);
+    string* name = new_str(zip_entry_name(zip));
+  }
+  return 0;
 }
 
 static int is_loaded(string* name) {
