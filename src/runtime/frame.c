@@ -1,7 +1,7 @@
 #include <include/rt.h>
 #include <stdlib.h>
 
-frame* new_frame(method* m, list* cp) {
+frame* new_frame(method* m, list* cp, string* class) {
   if (is(m, NATIVE)) 
     return NULL;
   frame* f = GC_MALLOC(sizeof(frame));
@@ -12,6 +12,7 @@ frame* new_frame(method* m, list* cp) {
     e->t = EMPTY;
     add(f->lvarray, e);
   }
+  f->class = class;
   f->stack = new_list();
   f->mt = m;
   f->cp = cp;

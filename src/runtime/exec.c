@@ -12,7 +12,7 @@ static inline u1 safe_get(u1* buf, u2 index, u2 len) {
 }
 
 void exec(frame* f) {
-  dbg("Starting method %s with signature %s", f->mt->name->buf, f->mt->desc->buf);
+  dbg("Starting method %s.%s with signature %s", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
   attrs* code_attr = (attrs*) get(f->mt->attrs, 0);
   u1* code = code(code_attr).exec;
   u4 len = code(code_attr).code_len;
@@ -168,7 +168,7 @@ void exec(frame* f) {
         continue;
       }
       case 177: break; // return
-      case 183: {
+      case 183: { // invokespecial
         u2 index;
         make(index);
         pool_elem* pe = get_elem(f->cp, index);
@@ -184,7 +184,7 @@ void exec(frame* f) {
           err("name type index of method ref does not point to valid name type structure");
         ntype_elem* nte = nt->elem.nt;
         method* m = get_method(c, get_utf8(f->cp, nte->name)->buf, get_utf8(f->cp, nte->desc)->buf);
-        frame* mt = new_frame(m, c->cp);
+        frame* mt = new_frame(m, c->cp, c->this_class);
         elem* ref = pop(f);
         set(mt->lvarray, 0, ref);
         exec(mt);

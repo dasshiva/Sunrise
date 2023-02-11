@@ -37,12 +37,13 @@ typedef struct {
 } elem;
 
 typedef struct {
+  string* class;
   list* lvarray;
   method* mt;
   list* cp;
   list* stack;
 } frame;
-frame* new_frame(method* m, list* cp);
+frame* new_frame(method* m, list* cp, string* class);
 void push(frame* f, elem* data);
 void* pop(frame* f);
 

@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     method* m = get_method(c, "main","()V");
     if (m == NULL) 
       err ("Method main not found");
-    frame* f = new_frame(m, c->cp);
+    frame* f = new_frame(m, c->cp, c->this_class);
     exec(f);
     return 0;
 }
