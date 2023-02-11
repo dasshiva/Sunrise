@@ -7,11 +7,16 @@ class* get_class(char* file);
 int load_jar(char* file);
 
 typedef enum {
+  BYTE,
+  SHORT,
+  BOOL,
+  CHAR,
   INT,
   LONG,
   FLOAT,
   DOUBLE,
   REF,
+  ARRAY,
   EMPTY
 } Type;
 
@@ -42,6 +47,7 @@ typedef struct {
   method* mt;
   list* cp;
   list* stack;
+  Type ret;
 } frame;
 frame* new_frame(method* m, list* cp, string* class);
 void push(frame* f, elem* data);

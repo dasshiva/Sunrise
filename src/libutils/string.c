@@ -64,7 +64,7 @@ string* substr(string* s, const u4 start, const u4 end) {
     err("Trying to extract sub string when start index(%d) is more than end index(%d)", start, end);
   string* str = GC_MALLOC(sizeof(string));
   str->len = end - start;
-  str->cap = str->len + 20;
+  str->cap = str->len;
   str->buf = GC_MALLOC(sizeof(char) * str->cap);
   for (u4 i = start, j = 0; i < end; i++, j++) {
     str->buf[j] = s->buf[i];

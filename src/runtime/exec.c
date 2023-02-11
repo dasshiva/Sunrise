@@ -11,7 +11,7 @@ static inline u1 safe_get(u1* buf, u2 index, u2 len) {
   return buf[index];
 }
 
-void exec(frame* f) {
+elem* exec(frame* f) {
   dbg("Starting method %s.%s with signature %s", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
   attrs* code_attr = (attrs*) get(f->mt->attrs, 0);
   u1* code = code(code_attr).exec;
@@ -167,13 +167,14 @@ void exec(frame* f) {
         pc = offset;
         continue;
       }
-      case 177: break; // return
+      case 177: goto end;
+      case 182: // invokevirtual
       case 183: { // invokespecial
         u2 index;
         make(index);
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != MREF) 
-          err("invokespecial used but element at index is not a method reference");
+          err("invokespecial used but element at index is not a method reference", (code[pc] - 182 == 0) ? "invokevirtual" : "invokespecial");
         mfiref_elem* mref = pe->elem.mref;
         pool_elem* cl = get_elem(f->cp, mref->class);
         if (cl->tag != CLASS) 
@@ -185,9 +186,13 @@ void exec(frame* f) {
         ntype_elem* nte = nt->elem.nt;
         method* m = get_method(c, get_utf8(f->cp, nte->name)->buf, get_utf8(f->cp, nte->desc)->buf);
         frame* mt = new_frame(m, c->cp, c->this_class);
+        if (!mt)
+          err("DUDE WTF");
         elem* ref = pop(f);
         set(mt->lvarray, 0, ref);
-        exec(mt);
+        elem* e = exec(mt);
+        if (e)
+          push(f, e);
         break;
       }
       case 187: { // new
@@ -207,5 +212,8 @@ void exec(frame* f) {
     }
     pc++;
   }
-  dbg("Method execution finished successfully");
+end:
+   dbg("Method %s.%s with descriptor %s finished successfully", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
+   if (f->ret == EMPTY)
+     return NULL;
 }
