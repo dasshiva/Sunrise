@@ -18,13 +18,11 @@ list* new_cpool(handle* h, u2 len) {
     dbg("Index %d has tag %d", i, tag);
     switch (tag) {
       case UTF8: {
-        utf8_elem* e = GC_MALLOC(sizeof(utf8_elem));
-        e->length = get_u2(h);
-        e->data = str_with_len(e->length);
-        for (u2 i = 0; i < e->length; i++) {
-          append(e->data, (char) get_u1(h));
+        string* e = str_with_len(get_u2(h));
+        for (u2 i = 0; i < e->len; i++) {
+          append(e, (char) get_u1(h));
         }
-        dbg("UTF8 content - %s", e->data->buf);
+        dbg("UTF8 content - %s", e->buf);
         pelem->elem.utf = e;
         break;
       }
@@ -116,7 +114,7 @@ list* new_cpool(handle* h, u2 len) {
 string* get_utf8(list* pool, u2 index) {
   pool_elem* p = get(pool, index - 1);
   switch (p->tag) {
-    case UTF8: return p->elem.utf->data; 
+    case UTF8: return p->elem.utf; 
     case CLASS: {
       u2 class = p->elem.class;
       return get_utf8(pool, class);

@@ -12,7 +12,7 @@ static list* classes = NULL;
 static int is_loaded(string* name);
 char* syslib[2][SYSLIB_SZ] = {
   { "java/lang/Object", NULL}, 
-  { "syslib/VMObj", NULL }
+  { "syslib/VMObjExt", NULL }
 };
 
 class* get_class(char* file) {
@@ -58,7 +58,18 @@ int load_jar(char* file) {
     else 
       add(classes, c);
   }
-  return 0;
+  if (sys) {
+    int res = is_loaded(new_str("syslib/VMObj"));
+    if (res == -1)
+      err("syslib.jar doesn't have class VMObj");
+    class* obj = get(classes, (u4) res);
+    res = is_loaded(new_str("java/lang/Object"));
+    if (res == -1)
+      err("syslib.jar doesn't have class VMObjExt");
+    class* ext = get(classes, (u4) res);
+    
+  }
+  return 1;
 }
 
 static int is_loaded(string* name) {

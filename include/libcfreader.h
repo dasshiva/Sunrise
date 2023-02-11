@@ -29,11 +29,6 @@ void skip(handle* h, u4 amt);
 #define EMP 20 // This is for empty elements such as the element after a long or double in the constant pool
 
 typedef struct {
-  u2 length;
-  string* data;
-} utf8_elem;
-
-typedef struct {
   u2 name;
   u2 desc;
 } ntype_elem;
@@ -47,7 +42,7 @@ typedef struct {
 typedef struct {
   u1 tag;
   union {
-    utf8_elem* utf;  // utf8 string
+    string* utf;  // utf8 string
     mfiref_elem* mref; // method reference 
     mfiref_elem* fref; // field reference 
     mfiref_elem* iref; // interface method reference 
