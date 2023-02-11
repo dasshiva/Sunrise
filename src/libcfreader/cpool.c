@@ -18,8 +18,9 @@ list* new_cpool(handle* h, u2 len) {
     dbg("Index %d has tag %d", i, tag);
     switch (tag) {
       case UTF8: {
-        string* e = str_with_len(get_u2(h));
-        for (u2 i = 0; i < e->len; i++) {
+        u2 len = get_u2(h);
+        string* e = str_with_len(len);
+        for (u2 i = 0; i < len; i++) {
           append(e, (char) get_u1(h));
         }
         dbg("UTF8 content - %s", e->buf);

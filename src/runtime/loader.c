@@ -54,20 +54,10 @@ int load_jar(char* file) {
           break;
         }
       }
+      add(classes, c);
     }
     else 
       add(classes, c);
-  }
-  if (sys) {
-    int res = is_loaded(new_str("syslib/VMObj"));
-    if (res == -1)
-      err("syslib.jar doesn't have class VMObj");
-    class* obj = get(classes, (u4) res);
-    res = is_loaded(new_str("java/lang/Object"));
-    if (res == -1)
-      err("syslib.jar doesn't have class VMObjExt");
-    class* ext = get(classes, (u4) res);
-    
   }
   return 1;
 }

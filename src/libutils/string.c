@@ -19,7 +19,6 @@ string* str_with_len(u4 len) {
   string* s = new_empty_str();
   if (s->cap > len) 
     s->buf = GC_REALLOC(s->buf, len);
-  s->len = len;
   return s;
 }
 
