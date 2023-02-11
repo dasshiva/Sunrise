@@ -33,6 +33,8 @@ void append(string* s, char c) {
 }
 
 int equals(const string* lhs, const char* rhs) {
+  if (!rhs)
+    return 0;
   if (lhs->len == strlen(rhs)) {
     u4 a = 0;
     while (a < lhs->len) {

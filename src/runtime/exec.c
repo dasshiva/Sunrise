@@ -132,6 +132,18 @@ void exec(frame* f) {
         set(f->lvarray, delta, e);
         break;
       }
+      // astore_<n>
+      case 75:
+      case 76:
+      case 77:
+      case 78: {
+        u1 delta = code[pc] - 75;
+        elem* e = pop(f);
+        if (e->t != REF) 
+          err("dstore_<%d> used but stack top is not float", delta);
+        set(f->lvarray, delta, e);
+        break;
+      }
       // dup
       case 89: {
         elem* e = get(f->stack, f->stack->len - 1);
@@ -172,7 +184,6 @@ void exec(frame* f) {
           err("name type index of method ref does not point to valid name type structure");
         ntype_elem* nte = nt->elem.nt;
         method* m = get_method(c, get_utf8(f->cp, nte->name)->buf, get_utf8(f->cp, nte->desc)->buf);
-        dbg("Here");
         frame* mt = new_frame(m, c->cp);
         elem* ref = pop(f);
         set(mt->lvarray, 0, ref);
