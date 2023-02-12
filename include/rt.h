@@ -48,6 +48,7 @@ typedef struct {
   list* cp;
   list* stack;
   Type ret;
+  u2 args;
 } frame;
 frame* new_frame(method* m, list* cp, string* class);
 void push(frame* f, elem* data);
@@ -55,5 +56,5 @@ void* pop(frame* f);
 
 #define code(a) a->attr.code
 
-void native_call(frame* inv, string* name, string* desc);
+elem* native_call(frame* inv, string* name);
 #endif

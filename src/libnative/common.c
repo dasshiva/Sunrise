@@ -1,4 +1,6 @@
 #include <include/types.h>
-i4 hashCode(void* obj) {
-  return (int) obj;
+#include <include/rt.h>
+
+i4 hashCode(elem* obj) {
+  return (int) obj->data.ref;
 }

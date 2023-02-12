@@ -186,11 +186,17 @@ elem* exec(frame* f) {
         ntype_elem* nte = nt->elem.nt;
         method* m = get_method(c, get_utf8(f->cp, nte->name)->buf, get_utf8(f->cp, nte->desc)->buf);
         frame* mt = new_frame(m, c->cp, c->this_class);
-        if (!mt)
-          err("DUDE WTF");
-        elem* ref = pop(f);
-        set(mt->lvarray, 0, ref);
-        elem* e = exec(mt);
+        elem* e = NULL;
+        if (!mt) 
+          e = native_call(f, get_utf8(f->cp, nte->name));
+        else {
+          set(mt->lvarray, 0, pop(f));
+          for (u2 i = 1; i < f->args + 1; i++) {
+            elem* arg = pop(f);
+            set(mt->lvarray, i, pop(f));
+          }
+          e = exec(mt);
+        }
         if (e)
           push(f, e);
         break;

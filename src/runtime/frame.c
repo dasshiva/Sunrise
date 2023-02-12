@@ -37,8 +37,9 @@ void* pop(frame* f) {
   return el;
 }
 
-void parse_desc(frame* f) {
+static void parse_desc(frame* f) {
   string* desc = f->mt->desc;
+  u2 arg = 0;
   int end = find(desc, ')');
   if (desc->buf[0] != '(' || end == -1)
     err("Method signature is invalid");
@@ -46,7 +47,7 @@ void parse_desc(frame* f) {
   if (end != 1)
     params = substr(desc, 1, end);
   if (params) {
-    for (u2 i = 0, arg = 0; i < params->len; i++) {
+    for (u2 i = 0; i < params->len; i++) {
       switch(params->buf[i]) {
         case 'B':
         case 'C':
@@ -87,6 +88,7 @@ void parse_desc(frame* f) {
       }
     }
   }
+  f->args = arg;
   switch(desc->buf[end + 1]) {
     case 'B': f->ret = BYTE; break;
     case 'C': f->ret = CHAR; break;
