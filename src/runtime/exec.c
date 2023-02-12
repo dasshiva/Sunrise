@@ -5,6 +5,16 @@
    u1 byte2 = safe_get(code, ++pc, len); \
    res = (byte1 << 8) | byte2; 
 
+static inline Type as_needed(Type t) {
+  switch (t) {
+    case BYTE:
+    case CHAR:
+    case SHORT:
+    case BOOL:
+    case INT: return INT;
+    default: return t;
+  }
+}
 static inline u1 safe_get(u1* buf, u2 index, u2 len) {
   if (index >= len) 
     err("Invalid access into array with index %d when length is %d");
@@ -69,7 +79,7 @@ elem* exec(frame* f) {
         u1 delta = code[pc] - 42;
         elem* e = get(f->lvarray, delta);
         if (e->t != REF) 
-          err("aload_<%d> used but element at index %d is not a rreference", delta, delta);
+          err("aload_<%d> used but element at index %d is not a reference", delta, delta);
         push(f, e);
         break;
       }
@@ -103,7 +113,7 @@ elem* exec(frame* f) {
         u1 delta = code[pc] - 63;
         elem* e = pop(f);
         if (e->t != LONG) 
-          err("lstore_<%d> used but stack top is not int", delta);
+          err("lstore_<%d> used but stack top is not long", delta);
         set(f->lvarray, delta, e);
         set(f->lvarray, delta + 1, e);
         break;
@@ -128,7 +138,7 @@ elem* exec(frame* f) {
         u1 delta = code[pc] - 71;
         elem* e = pop(f);
         if (e->t != FLOAT) 
-          err("dstore_<%d> used but stack top is not float", delta);
+          err("dstore_<%d> used but stack top is not double", delta);
         set(f->lvarray, delta, e);
         break;
       }
@@ -140,7 +150,7 @@ elem* exec(frame* f) {
         u1 delta = code[pc] - 75;
         elem* e = pop(f);
         if (e->t != REF) 
-          err("dstore_<%d> used but stack top is not float", delta);
+          err("astore_<%d> used but stack top is not reference", delta);
         set(f->lvarray, delta, e);
         break;
       }
@@ -174,7 +184,7 @@ elem* exec(frame* f) {
         make(index);
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != MREF) 
-          err("invokespecial used but element at index is not a method reference", (code[pc] - 182 == 0) ? "invokevirtual" : "invokespecial");
+          err("%s used but element at index is not a method reference", (code[pc] - 182 == 0) ? "invokevirtual" : "invokespecial");
         mfiref_elem* mref = pe->elem.mref;
         pool_elem* cl = get_elem(f->cp, mref->class);
         if (cl->tag != CLASS) 
@@ -192,7 +202,6 @@ elem* exec(frame* f) {
         else {
           set(mt->lvarray, 0, pop(f));
           for (u2 i = 1; i < f->args + 1; i++) {
-            elem* arg = pop(f);
             set(mt->lvarray, i, pop(f));
           }
           e = exec(mt);
@@ -222,4 +231,10 @@ end:
    dbg("Method %s.%s with descriptor %s finished successfully", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
    if (f->ret == EMPTY)
      return NULL;
+   else {
+     elem* ret = pop(f);
+     if (as_needed(f->ret) != ret->t) 
+       err("Return type doesn't match with actual element to return");
+     return ret;
+   }
 }
