@@ -167,7 +167,7 @@ elem* exec(frame* f) {
         pc = offset;
         continue;
       }
-      case 177: goto end;
+      case 177: goto end; // return 
       case 182: // invokevirtual
       case 183: { // invokespecial
         u2 index;

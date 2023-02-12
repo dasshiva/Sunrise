@@ -54,4 +54,6 @@ void push(frame* f, elem* data);
 void* pop(frame* f);
 
 #define code(a) a->attr.code
+
+void native_call(frame* inv, string* name, string* desc);
 #endif
