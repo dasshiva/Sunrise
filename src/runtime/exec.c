@@ -198,7 +198,7 @@ elem* exec(frame* f) {
         frame* mt = new_frame(m, c->cp, c->this_class);
         elem* e = NULL;
         if (!mt) 
-          e = native_call(f, get_utf8(f->cp, nte->name));
+          e = native_call(f, get_utf8(f->cp, nte->name), 0);
         else {
           set(mt->lvarray, 0, pop(f));
           for (u2 i = 1; i < f->args + 1; i++) {

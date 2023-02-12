@@ -56,5 +56,5 @@ void* pop(frame* f);
 
 #define code(a) a->attr.code
 
-elem* native_call(frame* inv, string* name);
+elem* native_call(frame* inv, string* name, int stat);
 #endif
