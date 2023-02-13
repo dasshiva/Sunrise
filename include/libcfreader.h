@@ -47,6 +47,7 @@ typedef struct {
     mfiref_elem* fref; // field reference 
     mfiref_elem* iref; // interface method reference 
     u2 class; // index representing class name
+    u2 string; // index to string
     ntype_elem* nt; // name type element
     i4 integer; // int element
     i8 lng; // long element

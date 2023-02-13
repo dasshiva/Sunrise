@@ -3,5 +3,7 @@ public class Hello {
 	public static void main() {
 		Hello h = new Hello();
 		int a = h.hashCode();
+		char[] c = new char[10];
+		String str = "Hello World";
 	}
 }

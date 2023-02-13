@@ -85,6 +85,11 @@ list* new_cpool(handle* h, u2 len) {
         pelem->elem.class = get_u2(h);
         break;
       }
+      case STRING: {
+        pelem->elem.string = get_u2(h);
+        break;
+      }
+      case FIELD:
       case MREF: {
         mfiref_elem* melem = GC_MALLOC(sizeof(mfiref_elem));
         melem->class = get_u2(h);

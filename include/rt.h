@@ -28,12 +28,20 @@ typedef struct {
 } obj;
 obj* new_obj(class* c);
 
+typedef struct {
+  Type t;
+  list* data;
+  u4 size;
+} array;
+array* new_array(i4 size, u1 type);
+
 typedef union {
   i4 integer;
   float flt;
   i8 lng;
   double dbl;
   obj* ref;
+  array* arr;
 } elem_val;
 
 typedef struct {

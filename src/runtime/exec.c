@@ -28,6 +28,13 @@ elem* exec(frame* f) {
   u4 len = code(code_attr).code_len;
   for (u4 pc = 0; pc < len; ) {
     switch (safe_get(code, pc, len)) {
+      case 16: {
+        elem* e = GC_MALLOC(sizeof(elem));
+        e->t = INT;
+        e->data.integer = safe_get(code, ++pc, len);
+        push(f, e);
+        break;
+      }
       case 18: { // ldc
         u2 index = safe_get(code, ++pc, len);
         pool_elem* p = get_elem(f->cp, index);
@@ -42,6 +49,13 @@ elem* exec(frame* f) {
           case FLT: {
             elem* e = GC_MALLOC(sizeof(elem));
             e->t = FLOAT;
+            e->data.flt = p->elem.flt;
+            push(f, e);
+            break;
+          }
+          case STRING: {
+            elem* e = GC_MALLOC(sizeof(elem));
+            e->t = REF;
             e->data.flt = p->elem.flt;
             push(f, e);
             break;
@@ -149,7 +163,7 @@ elem* exec(frame* f) {
       case 78: {
         u1 delta = code[pc] - 75;
         elem* e = pop(f);
-        if (e->t != REF) 
+        if (e->t != REF && e->t != ARRAY) 
           err("astore_<%d> used but stack top is not reference", delta);
         set(f->lvarray, delta, e);
         break;
@@ -220,6 +234,16 @@ elem* exec(frame* f) {
         elem* e = GC_MALLOC(sizeof(elem));
         e->t = REF;
         e->data.ref = new_obj(c);
+        push(f, e);
+        break;
+      }
+      case 188: { // newarray
+        elem* e = GC_MALLOC(sizeof(elem));
+        elem* size = pop(f);
+        if (size->t != INT) 
+          err("newarray used but array size is not int");
+        e->t = ARRAY;
+        e->data.arr = new_array(size->data.integer, safe_get(code, ++pc, len));
         push(f, e);
         break;
       }

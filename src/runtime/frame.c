@@ -84,7 +84,24 @@ static void parse_desc(frame* f) {
           e->t = REF;
           break;
         }
-        default: err("Arrays not implemented");
+        case '[': {
+          if (at(desc, i + 1) == '[') 
+            err("Multidimensional arrays not supported");
+          else if (at(desc, i + 1) == 'L') {
+            int semi = find(params, ';');
+            if (semi + 1 != end) {
+              i = 0;
+              params = substr(params, semi + 1, end);
+            }
+            else 
+              i = semi;
+          }
+          else
+             i += 2;
+          elem* e = get(f->lvarray, arg++);
+          e->t = ARRAY;
+          break;
+        }
       }
     }
   }
@@ -99,6 +116,6 @@ static void parse_desc(frame* f) {
     case 'D': f->ret = DOUBLE; break;
     case 'L': f->ret = REF; break;
     case 'V': f->ret = EMPTY; break;
-    default: err("Not implemented %c", desc->buf[end + 1]);
+    default: f->ret = ARRAY;
   }
 }
