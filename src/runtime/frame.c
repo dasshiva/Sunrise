@@ -11,7 +11,6 @@ frame* new_frame(method* m, list* cp, string* class) {
   attrs* at = get(m->attrs, 0);
   for (u2 i = 0; i < code(at).locals; i++) {
     elem* e = GC_MALLOC(sizeof(elem));
-    e->t = EMPTY;
     add(f->lvarray, e);
   }
   f->class = class;

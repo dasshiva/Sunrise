@@ -56,7 +56,24 @@ elem* exec(frame* f) {
           case STRING: {
             elem* e = GC_MALLOC(sizeof(elem));
             e->t = REF;
-            e->data.flt = p->elem.flt;
+            string* str = get_utf8(f->cp, p->elem.string);
+            class* c = get_class("java/lang/String");
+            method* init = get_method(c, "<init>", "([C)V");
+            elem* self = GC_MALLOC(sizeof(elem));
+            self->t = REF;
+            self->data.ref = new_obj(c);
+            elem* arg = GC_MALLOC(sizeof(elem));
+            arg->t = ARRAY;
+            arg->data.arr = new_array(str->len, 5);
+            for (u2 i = 0; i < str->len; i++) {
+              elem* el = get(arg->data.arr->data, i);
+              el->data.integer = at(str, i);
+            }
+            frame* ctr = new_frame(init, c->cp, new_str("java/lang/String"));
+            set(ctr->lvarray, 0, self);
+            set(ctr->lvarray, 1, arg);
+            exec(ctr);
+            e->data.ref = self->data.ref;
             push(f, e);
             break;
           }
@@ -92,7 +109,7 @@ elem* exec(frame* f) {
       case 45: {
         u1 delta = code[pc] - 42;
         elem* e = get(f->lvarray, delta);
-        if (e->t != REF) 
+        if (e->t != REF && e->t != ARRAY) 
           err("aload_<%d> used but element at index %d is not a reference", delta, delta);
         push(f, e);
         break;
@@ -192,6 +209,22 @@ elem* exec(frame* f) {
         continue;
       }
       case 177: goto end; // return 
+      case 181: { // putstatic 
+        u2 index;
+        make(index);
+        pool_elem* pe = get_elem(f->cp, index);
+        if (pe->tag != FIELD) 
+          err("putfield used but element at index is not field reference");
+        mfiref_elem* fref = pe->elem.fref;
+        string* cl = get_utf8(f->cp, fref->class);
+       class* c = get_class(cl->buf);
+        pool_elem* nt = get_elem(f->cp, fref->nt);
+        if (nt->tag != NTYPE) 
+          err("name type index of field ref does not point to valid name type structure");
+        ntype_elem* nte = nt->elem.nt; 
+        err("putfield not implemented"); 
+        break; 
+      }
       case 182: // invokevirtual
       case 183: { // invokespecial
         u2 index;
@@ -215,7 +248,7 @@ elem* exec(frame* f) {
           e = native_call(f, get_utf8(f->cp, nte->name), 0);
         else {
           set(mt->lvarray, 0, pop(f));
-          for (u2 i = 1; i < f->args + 1; i++) {
+          for (u2 i = 1; i < mt->args + 1; i++) {
             set(mt->lvarray, i, pop(f));
           }
           e = exec(mt);
@@ -244,6 +277,16 @@ elem* exec(frame* f) {
           err("newarray used but array size is not int");
         e->t = ARRAY;
         e->data.arr = new_array(size->data.integer, safe_get(code, ++pc, len));
+        push(f, e);
+        break;
+      }
+      case 190: { // arraylength
+        elem* e = pop(f);
+        if (e->t != ARRAY) 
+          err("arraylength used but stack top is not an array");
+        elem* ret = GC_MALLOC(sizeof(elem));
+        ret->t = INT;
+        ret->data.integer = e->data.arr->size;
         push(f, e);
         break;
       }

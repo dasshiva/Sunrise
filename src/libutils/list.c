@@ -77,7 +77,7 @@ void set(list* l, u4 index, void* data) {
     err("Accessing index %d when len is %d", index, l->len);
    list* n = l;
    for(u4 i = 0; i < l->len; i++) {
-     if (n->index == i) {
+     if (n->index == index) {
        n->data = data;
        return;
      }

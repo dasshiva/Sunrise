@@ -49,12 +49,18 @@ int load_jar(char* file) {
         if (equals(c->this_class, syslib[1][i])) {
           dbg("Found class %s to be patched", c->this_class->buf);
           c->this_class = new_str(syslib[0][i]);
-          dbg("Patched class");
+          pool_elem* pe = GC_MALLOC(sizeof(pool_elem));
+          pe->tag = UTF8;
+          pe->elem.utf = new_str(syslib[0][i]);
+          set(c->cp, c->this_index - 1, pe);
+          dbg("Patched class to %s", c->this_class->buf);
           add(classes, c);
           break;
         }
+        else if (equals(c->this_class, "syslib/VMObj")) {
+          add(classes, c);
+        }
       }
-      add(classes, c);
     }
     else 
       add(classes, c);

@@ -86,7 +86,8 @@ class* new_class_from_handle(handle* h) {
   dbg("Constant pool length is %d", c->cp_len);
   c->cp = new_cpool(h, c->cp_len);
   c->flags = get_u2(h);
-  c->this_class = get_utf8(c->cp, get_u2(h));
+  c->this_index = get_u2(h);
+  c->this_class = get_utf8(c->cp, c->this_index);
   dbg("This class - %s", c->this_class->buf);
   u2 super = get_u2(h);
   if (super != 0) {

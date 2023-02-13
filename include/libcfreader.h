@@ -117,6 +117,7 @@ typedef struct {
   list* cp;
   u2 flags;
   string* super_class;
+  u2 this_index;
   string* this_class;
   u2 ints_count;
   u2* ints;
