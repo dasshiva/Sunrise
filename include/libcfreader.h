@@ -131,6 +131,7 @@ typedef struct {
 class* new_class(char* name);
 class* new_class_from_handle(handle* h);
 method* get_method(class* c, char* name, char* desc);
+field* get_field(class* c, char* name);
 
 #define PUB 0x0001
 #define PRIV 0x0002

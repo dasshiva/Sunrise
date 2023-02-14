@@ -21,14 +21,6 @@ typedef enum {
 } Type;
 
 typedef struct {
-  string* class;
-  list* cp;
-  list* fields;
-  list* methods;
-} obj;
-obj* new_obj(class* c);
-
-typedef struct {
   Type t;
   list* data;
   u4 size;
@@ -40,7 +32,7 @@ typedef union {
   float flt;
   i8 lng;
   double dbl;
-  obj* ref;
+  class* ref;
   array* arr;
 } elem_val;
 

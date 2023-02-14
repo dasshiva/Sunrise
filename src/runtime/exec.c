@@ -61,7 +61,7 @@ elem* exec(frame* f) {
             method* init = get_method(c, "<init>", "([C)V");
             elem* self = GC_MALLOC(sizeof(elem));
             self->t = REF;
-            self->data.ref = new_obj(c);
+            self->data.ref = c;
             elem* arg = GC_MALLOC(sizeof(elem));
             arg->t = ARRAY;
             arg->data.arr = new_array(str->len, 5);
@@ -209,7 +209,7 @@ elem* exec(frame* f) {
         continue;
       }
       case 177: goto end; // return 
-      case 181: { // putstatic 
+      case 181: { // putfield
         u2 index;
         make(index);
         pool_elem* pe = get_elem(f->cp, index);
@@ -217,11 +217,17 @@ elem* exec(frame* f) {
           err("putfield used but element at index is not field reference");
         mfiref_elem* fref = pe->elem.fref;
         string* cl = get_utf8(f->cp, fref->class);
-       class* c = get_class(cl->buf);
+        class* c = get_class(cl->buf);
         pool_elem* nt = get_elem(f->cp, fref->nt);
         if (nt->tag != NTYPE) 
           err("name type index of field ref does not point to valid name type structure");
         ntype_elem* nte = nt->elem.nt; 
+        field* f = get_field(c, get_utf8(c->cp, nte->name)->buf);
+        if (!f)
+          err("Field not found %s", get_utf8(c->cp, nte->name)->buf);
+        if (!equals(f->desc, get_utf8(c->cp, nte->desc)->buf))
+          err("Field descriptors do not match");
+        
         err("putfield not implemented"); 
         break; 
       }
@@ -264,9 +270,14 @@ elem* exec(frame* f) {
         if (pe->tag != CLASS) 
           err("new used but index does not point to valid constant pool class ref");
         class* c = get_class(get_utf8(f->cp, pe->elem.class)->buf);
+        for (u2 i = 0; i < c->fields_count; i++) {
+          field* f = get(c->fields, i);
+          if(!f->check_val) 
+            field_init(f);
+        }
         elem* e = GC_MALLOC(sizeof(elem));
         e->t = REF;
-        e->data.ref = new_obj(c);
+        e->data.ref = c;
         push(f, e);
         break;
       }

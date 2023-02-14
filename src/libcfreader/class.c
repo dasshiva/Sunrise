@@ -146,3 +146,12 @@ method* get_method(class* c, char* name, char* desc) {
   }
   return NULL;
 }
+
+field* get_field(class* c, char* name) {
+  for (u2 i = 0; i < c->fields_count; i++) {
+    field* f = get(c->fields, i);
+    if (equals(f->name, name))
+      return f;
+  }
+  return NULL;
+}
