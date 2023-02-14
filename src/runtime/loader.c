@@ -7,12 +7,12 @@
 #define init_list() \
  if(classes == NULL) \
  classes = new_list()
-#define SYSLIB_SZ 3
+#define SYSLIB_SZ 5
 static list* classes = NULL;
 static int is_loaded(string* name);
 char* syslib[2][SYSLIB_SZ] = {
-  { "java/lang/Object", "java/lang/String", NULL}, 
-  { "syslib/VMObjExt", "syslib/VMStr", NULL }
+  { "java/lang/Object", "java/lang/String", "java/lang/System", "java/io/PrintStream", NULL}, 
+  { "syslib/VMObjExt", "syslib/VMStr", "syslib/VMSys", "syslib/VMPrtStream", NULL }
 };
 
 class* get_class(char* file) {

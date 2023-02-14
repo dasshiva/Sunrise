@@ -213,13 +213,12 @@ elem* exec(frame* f) {
         u2 index;
         make(index);
         elem* e = pop(f);
-        dbg("%d", e == NULL);
+        elem* cls= pop(f);
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != FIELD) 
           err("putfield used but element at index is not field reference");
         mfiref_elem* fref = pe->elem.fref;
-        string* cl = get_utf8(f->cp, fref->class);
-        class* c = get_class(cl->buf);
+        class* c = cls->data.ref;
         pool_elem* nt = get_elem(f->cp, fref->nt);
         if (nt->tag != NTYPE) 
           err("name type index of field ref does not point to valid name type structure");
@@ -269,7 +268,7 @@ elem* exec(frame* f) {
             f->val.refer = e->data.ref;
             break;
           }
-        }
+        } 
         break; 
       }
       case 182: // invokevirtual
@@ -292,7 +291,7 @@ elem* exec(frame* f) {
         frame* mt = new_frame(m, c->cp, c->this_class);
         elem* e = NULL;
         if (!mt) {
-          e = native_call(f, get_utf8(f->cp, nte->name), 0); 
+          e = native_call(f, get_utf8(f->cp, nte->name), 0);
           push(f, e);
         }
         else {
@@ -345,11 +344,12 @@ elem* exec(frame* f) {
         elem* ret = GC_MALLOC(sizeof(elem));
         ret->t = INT;
         ret->data.integer = e->data.arr->size;
-        push(f, e);
+        push(f, ret);
         break;
       }
       default: err("Unrecognised or unimplemented opcode %d", code[pc]);
     }
+    //stack_trace(f);
     pc++;
   }
 end:

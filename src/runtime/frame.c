@@ -23,11 +23,12 @@ frame* new_frame(method* m, list* cp, string* class) {
 }
 
 void push(frame* f, elem* data) {
+  if (!data) 
+    err("Can't push null value to stack");
   attrs* c = get(f->mt->attrs, 0);
   if (f->stack->len == code(c).stack) 
     err("Stack overflow while executing method %s%s", f->mt->name->buf, f->mt->desc->buf);
   add(f->stack, data);
-  dbg("%d", ((elem*) get(f->stack, f->stack->len - 1))->t);
 }
 
 void* pop(frame* f) {
@@ -125,6 +126,6 @@ void stack_trace(frame* f) {
   dbg("Stack Trace");
   for (u2 i = 0; i < f->stack->len; i++) {
     elem* e = get(f->stack, i);
-    dbg("%d", e->t);
+    dbg("%d", (e == NULL) ? -1 : e->t);
   }
 }

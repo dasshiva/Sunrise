@@ -23,7 +23,8 @@ static list* get_last(const list* l) {
 static void get_next(list* l) {
   l->next = GC_MALLOC(sizeof(list));
   l->next->index = l->index + 1;
-  l->next->prev = l->next;
+  l->next->prev = l;
+  l->next->data = NULL;
   l->next->next = NULL;
 }
 
