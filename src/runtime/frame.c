@@ -11,6 +11,7 @@ frame* new_frame(method* m, list* cp, string* class) {
   attrs* at = get(m->attrs, 0);
   for (u2 i = 0; i < code(at).locals; i++) {
     elem* e = GC_MALLOC(sizeof(elem));
+    e->t = EMPTY;
     add(f->lvarray, e);
   }
   f->class = class;
@@ -26,12 +27,13 @@ void push(frame* f, elem* data) {
   if (f->stack->len == code(c).stack) 
     err("Stack overflow while executing method %s%s", f->mt->name->buf, f->mt->desc->buf);
   add(f->stack, data);
+  dbg("%d", ((elem*) get(f->stack, f->stack->len - 1))->t);
 }
 
 void* pop(frame* f) {
   if (f->stack->len == 0)
     err("Stack underflow while executing method %s%s", f->mt->name->buf, f->mt->desc->buf);
-  void* el = get(f->stack, f->stack->len - 1);
+  elem* el = get(f->stack, f->stack->len - 1);
   delete(f->stack, f->stack->len - 1);
   return el;
 }
@@ -116,5 +118,13 @@ static void parse_desc(frame* f) {
     case 'L': f->ret = REF; break;
     case 'V': f->ret = EMPTY; break;
     default: f->ret = ARRAY;
+  }
+}
+
+void stack_trace(frame* f) {
+  dbg("Stack Trace");
+  for (u2 i = 0; i < f->stack->len; i++) {
+    elem* e = get(f->stack, i);
+    dbg("%d", e->t);
   }
 }

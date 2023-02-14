@@ -42,10 +42,9 @@ void add(list* l, void* data) {
 void* get(list* l, u4 index) {
   if (l->len <= index) {
     err("Index is %d but len is %d", index, l->len);
-    return NULL;
   }
   list* n = l;
-  for(u4 i = 0; i <= index; i++) {
+  for(u4 i = 0; i < l->len; i++) {
     if (n->index == index) {
       return n->data;
     }

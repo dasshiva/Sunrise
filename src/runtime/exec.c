@@ -212,6 +212,8 @@ elem* exec(frame* f) {
       case 181: { // putfield
         u2 index;
         make(index);
+        elem* e = pop(f);
+        dbg("%d", e == NULL);
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != FIELD) 
           err("putfield used but element at index is not field reference");
@@ -227,8 +229,47 @@ elem* exec(frame* f) {
           err("Field not found %s", get_utf8(c->cp, nte->name)->buf);
         if (!equals(f->desc, get_utf8(c->cp, nte->desc)->buf))
           err("Field descriptors do not match");
-        
-        err("putfield not implemented"); 
+        switch (e->t) {
+          case BOOL:
+          case SHORT:
+          case CHAR:
+          case BYTE:
+          case INT: {
+            switch (f->desc->buf[0]) {
+              case 'B': f->val.byte = (i1) e->data.integer; break;
+              case 'C': f->val.chr = (i2) e->data.integer; break;
+              case 'S': f->val.sht = (i2) e->data.integer; break;
+              case 'Z': f->val.bool = (i1) e->data.integer; break;
+              case 'I': f->val.integer = e->data.integer; break;
+              default: err("Value at stack top not assignable to field");
+            }
+            break;
+          }
+          case LONG: {
+            if (f->desc->buf[0] != 'J')
+              err("Value at stack top not assignable to field");
+            f->val.lng = e->data.lng;
+            break;
+          }
+          case DOUBLE: {
+            if (f->desc->buf[0] != 'D')
+              err("Value at stack top not assignable to field");
+            f->val.dbl = e->data.dbl;
+            break;
+          }
+          case FLOAT: {
+            if (f->desc->buf[0] != 'F')
+              err("Value at stack top not assignable to field");
+            f->val.flt = e->data.flt;
+            break;
+          }
+          default: {
+            if (f->desc->buf[0] != 'L' && f->desc->buf[0] != '[')
+              err("Value at stack top not assignable to field");
+            f->val.refer = e->data.ref;
+            break;
+          }
+        }
         break; 
       }
       case 182: // invokevirtual
@@ -250,8 +291,10 @@ elem* exec(frame* f) {
         method* m = get_method(c, get_utf8(f->cp, nte->name)->buf, get_utf8(f->cp, nte->desc)->buf);
         frame* mt = new_frame(m, c->cp, c->this_class);
         elem* e = NULL;
-        if (!mt) 
-          e = native_call(f, get_utf8(f->cp, nte->name), 0);
+        if (!mt) {
+          e = native_call(f, get_utf8(f->cp, nte->name), 0); 
+          push(f, e);
+        }
         else {
           set(mt->lvarray, 0, pop(f));
           for (u2 i = 1; i < mt->args + 1; i++) {
@@ -259,8 +302,12 @@ elem* exec(frame* f) {
           }
           e = exec(mt);
         }
-        if (e)
+        /*if (e) {
+          stack_trace(f);
+          dbg("%d", mt == NULL);
           push(f, e);
+          stack_trace(f);
+        } */
         break;
       }
       case 187: { // new

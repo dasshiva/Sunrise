@@ -53,6 +53,7 @@ typedef struct {
 frame* new_frame(method* m, list* cp, string* class);
 void push(frame* f, elem* data);
 void* pop(frame* f);
+void stack_trace(frame* f);
 
 #define code(a) a->attr.code
 
