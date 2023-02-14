@@ -1,5 +1,32 @@
 #include <include/rt.h>
 
+inst* new_inst(class* c) {
+  inst* ret = GC_MALLOC(sizeof(inst));
+  ret->class = c->this_class;
+  ret->fields = new_list();
+  for(u2 i = 0; i < c->fields_count; i++) {
+    field* f = get(c->fields, i);
+    if (!f->check_val) {
+      field* new = GC_MALLOC(sizeof(field));
+      new->flags = f->flags;
+      new->name = f->name;
+      new->desc = f->desc;
+      add(ret->fields, new);
+    }
+  }
+  ret->methods = c->methods;
+  return ret;
+}
+
+field* get_inst_field(inst* c, char* name) {
+  for (u2 i = 0; i < c->fields->len; i++) {
+    field* f = get(c->fields, i);
+    if (equals(f->name, name))
+      return f;
+  }
+  return NULL;
+}
+
 array* new_array(i4 size, u1 type) {
   array* ret = GC_MALLOC(sizeof(array));
   ret->size = size;

@@ -26,7 +26,8 @@ elem* exec(frame* f) {
   attrs* code_attr = (attrs*) get(f->mt->attrs, 0);
   u1* code = code(code_attr).exec;
   u4 len = code(code_attr).code_len;
-  for (u4 pc = 0; pc < len; ) {
+  for (i8 pc = 0, instr = 0; pc < len; ) {
+    instr = pc;
     switch (safe_get(code, pc, len)) {
       case 16: {
         elem* e = GC_MALLOC(sizeof(elem));
@@ -61,7 +62,7 @@ elem* exec(frame* f) {
             method* init = get_method(c, "<init>", "([C)V");
             elem* self = GC_MALLOC(sizeof(elem));
             self->t = REF;
-            self->data.ref = c;
+            self->data.ref = new_inst(c);
             elem* arg = GC_MALLOC(sizeof(elem));
             arg->t = ARRAY;
             arg->data.arr = new_array(str->len, 5);
@@ -205,28 +206,103 @@ elem* exec(frame* f) {
         make(offset);
         if ((i2)pc - offset <= 0)
           err("Offset to jump %d causes pc underflow", offset);
-        pc = offset;
+        dbg("%d", offset);
+        instr += offset;
+        pc = instr;
+        dbg("%d", pc);
         continue;
       }
       case 177: goto end; // return 
+      case 178: { // getstatic
+        u2 index;
+        make(index);
+        pool_elem* pe = get_elem(f->cp, index);
+        if (pe->tag != FIELD)
+          err("getstatic used but constant pool ref is not valid field ref");
+        mfiref_elem* fref = pe->elem.fref;
+        pool_elem* cl = get_elem(f->cp, fref->class);
+        if (cl->tag != CLASS) 
+          err("class index of field ref does not point to valid class");
+        class* c = get_class(get_utf8(f->cp, cl->elem.class)->buf);
+        pool_elem* nt = get_elem(f->cp, fref->nt);
+        if (nt->tag != NTYPE) 
+          err("name type index of field ref does not point to valid name type structure");
+        ntype_elem* nte = nt->elem.nt;
+        field* fe = get_field(c, get_utf8(f->cp, nte->name)->buf);
+        elem* e = GC_MALLOC(sizeof(elem));
+        switch (fe->desc->buf[0]) {
+          case 'B': {
+            e->t = INT;
+            e->data.integer = fe->stat_val.byte;
+            break;
+          }
+          case 'C': {
+            e->t = INT;
+            e->data.integer = fe->stat_val.chr;
+            break;
+          }
+         case 'S': {
+            e->t = INT;
+            e->data.integer = fe->stat_val.sht;
+            break;
+          }
+          case 'Z': {
+            e->t = INT;
+            e->data.integer = fe->stat_val.bool;
+            break;
+          }
+          case 'I': {
+            e->t = INT;
+            e->data.integer = fe->stat_val.integer;
+            break;
+          }
+          case 'J': {
+            e->t = LONG;
+            e->data.lng = fe->stat_val.lng;
+            break;
+          }
+          case 'F': {
+            e->t = FLOAT;
+            e->data.flt = fe->stat_val.flt;
+            break;
+          }
+          case 'D': {
+            e->t = DOUBLE;
+            e->data.dbl = fe->stat_val.dbl;
+            break;
+          }
+          case 'L': {
+            e->t = REF;
+            e->data.ref = fe->stat_val.refer;
+            break;
+          }
+          case '[': {
+            e->t = ARRAY;
+            e->data.arr = fe->stat_val.refer;
+            break;
+          }
+        }
+        push(f, e);
+        break;
+      }
       case 181: { // putfield
         u2 index;
         make(index);
         elem* e = pop(f);
-        elem* cls= pop(f);
+        elem* cls = pop(f);
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != FIELD) 
           err("putfield used but element at index is not field reference");
         mfiref_elem* fref = pe->elem.fref;
-        class* c = cls->data.ref;
+        inst* c = cls->data.ref;
         pool_elem* nt = get_elem(f->cp, fref->nt);
         if (nt->tag != NTYPE) 
           err("name type index of field ref does not point to valid name type structure");
         ntype_elem* nte = nt->elem.nt; 
-        field* f = get_field(c, get_utf8(c->cp, nte->name)->buf);
-        if (!f)
-          err("Field not found %s", get_utf8(c->cp, nte->name)->buf);
-        if (!equals(f->desc, get_utf8(c->cp, nte->desc)->buf))
+        field* fld = get_inst_field(c, get_utf8(f->cp, nte->name)->buf);
+        if (!fld)
+          err("Field not found %s", get_utf8(f->cp, nte->name)->buf);
+        if (!equals(fld->desc, get_utf8(f->cp, nte->desc)->buf))
           err("Field descriptors do not match");
         switch (e->t) {
           case BOOL:
@@ -234,41 +310,42 @@ elem* exec(frame* f) {
           case CHAR:
           case BYTE:
           case INT: {
-            switch (f->desc->buf[0]) {
-              case 'B': f->val.byte = (i1) e->data.integer; break;
-              case 'C': f->val.chr = (i2) e->data.integer; break;
-              case 'S': f->val.sht = (i2) e->data.integer; break;
-              case 'Z': f->val.bool = (i1) e->data.integer; break;
-              case 'I': f->val.integer = e->data.integer; break;
+            switch (fld->desc->buf[0]) {
+              case 'B': fld->dyn_val.byte = (i1) e->data.integer; break;
+              case 'C': fld->dyn_val.chr = (i2) e->data.integer; break;
+              case 'S': fld->dyn_val.sht = (i2) e->data.integer; break;
+              case 'Z': fld->dyn_val.bool = (i1) e->data.integer; break;
+              case 'I': fld->dyn_val.integer = e->data.integer; break;
               default: err("Value at stack top not assignable to field");
             }
             break;
           }
           case LONG: {
-            if (f->desc->buf[0] != 'J')
+            if (fld->desc->buf[0] != 'J')
               err("Value at stack top not assignable to field");
-            f->val.lng = e->data.lng;
+            fld->dyn_val.lng = e->data.lng;
             break;
           }
           case DOUBLE: {
-            if (f->desc->buf[0] != 'D')
+            if (fld->desc->buf[0] != 'D')
               err("Value at stack top not assignable to field");
-            f->val.dbl = e->data.dbl;
+            fld->dyn_val.dbl = e->data.dbl;
             break;
           }
           case FLOAT: {
-            if (f->desc->buf[0] != 'F')
+            if (fld->desc->buf[0] != 'F')
               err("Value at stack top not assignable to field");
-            f->val.flt = e->data.flt;
+            fld->dyn_val.flt = e->data.flt;
             break;
           }
           default: {
-            if (f->desc->buf[0] != 'L' && f->desc->buf[0] != '[')
+            if (fld->desc->buf[0] != 'L' && fld->desc->buf[0] != '[')
               err("Value at stack top not assignable to field");
-            f->val.refer = e->data.ref;
+            fld->dyn_val.refer = e->data.ref;
             break;
           }
         } 
+       // dbg("Here");
         break; 
       }
       case 182: // invokevirtual
@@ -292,7 +369,6 @@ elem* exec(frame* f) {
         elem* e = NULL;
         if (!mt) {
           e = native_call(f, get_utf8(f->cp, nte->name), 0);
-          push(f, e);
         }
         else {
           set(mt->lvarray, 0, pop(f));
@@ -301,12 +377,9 @@ elem* exec(frame* f) {
           }
           e = exec(mt);
         }
-        /*if (e) {
-          stack_trace(f);
-          dbg("%d", mt == NULL);
+        if (e) {
           push(f, e);
-          stack_trace(f);
-        } */
+        } 
         break;
       }
       case 187: { // new
@@ -316,14 +389,9 @@ elem* exec(frame* f) {
         if (pe->tag != CLASS) 
           err("new used but index does not point to valid constant pool class ref");
         class* c = get_class(get_utf8(f->cp, pe->elem.class)->buf);
-        for (u2 i = 0; i < c->fields_count; i++) {
-          field* f = get(c->fields, i);
-          if(!f->check_val) 
-            field_init(f);
-        }
         elem* e = GC_MALLOC(sizeof(elem));
         e->t = REF;
-        e->data.ref = c;
+        e->data.ref = new_inst(c);
         push(f, e);
         break;
       }

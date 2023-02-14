@@ -4,7 +4,17 @@ static void init_field(list* cp, field* f) {
   if (f->attrs == NULL) {
     if (is(f, STAT)) {
       f->check_val = 1;
-      field_init(f);
+      switch(f->desc->buf[0]) { 
+        case 'B' : f->stat_val.byte = 0; break; 
+        case 'C' : f->stat_val.chr = 0; break;
+        case 'D' : f->stat_val.flt = 0.0f; break;
+        case 'F' : f->stat_val.dbl = 0.0; break; 
+        case 'I' : f->stat_val.integer = 0; break; 
+        case 'J' : f->stat_val.lng = 0; break; 
+        case 'S' : f->stat_val.sht = 0; break; 
+        case 'Z' : f->stat_val.bool = 0; break; 
+        default: f->stat_val.refer = NULL; 
+      }
     }
     else {
       f->check_val = 0;
@@ -18,49 +28,49 @@ static void init_field(list* cp, field* f) {
       case 'B' : {
         if(pe->tag != INTEGER) 
          err("ConstantValue has to be CONSTANT_Integer for byte field %s", f->name->buf);
-        f->val.byte = pe->elem.integer;
+        f->stat_val.byte = pe->elem.integer;
         break;
       }
       case 'C' : {
         if(pe->tag != INTEGER) 
          err("ConstantValue has to be CONSTANT_Integer for char field %s", f->name->buf);
-        f->val.chr = pe->elem.integer;
+        f->stat_val.chr = pe->elem.integer;
         break;
       }
       case 'I' : {
         if(pe->tag != INTEGER) 
          err("ConstantValue has to be CONSTANT_Integer for int field %s", f->name->buf);
-        f->val.integer = pe->elem.integer;
+        f->stat_val.integer = pe->elem.integer;
         break;
       }
       case 'S' : {
         if(pe->tag != INTEGER) 
          err("ConstantValue has to be CONSTANT_Integer for byte field %s", f->name->buf);
-        f->val.sht = pe->elem.integer;
+        f->stat_val.sht = pe->elem.integer;
         break;
       }
       case 'Z' : {
        if(pe->tag != INTEGER) 
          err("ConstantValue has to be CONSTANT_Integer for boolean field %s", f->name->buf);
-        f->val.bool = pe->elem.integer;
+        f->stat_val.bool = pe->elem.integer;
         break;
       }
       case 'D' : {
         if(pe->tag != DBL) 
          err("ConstantValue has to be CONSTANT_Integer for double field %s", f->name->buf);
-        f->val.dbl = pe->elem.dbl;
+        f->stat_val.dbl = pe->elem.dbl;
         break;
       }
       case 'F' : {
         if(pe->tag != FLT) 
          err("ConstantValue has to be CONSTANT_Integer for float field %s", f->name->buf);
-        f->val.flt = pe->elem.flt;
+        f->stat_val.flt = pe->elem.flt;
         break;
       }
       case 'J' : {
        if(pe->tag != LNG) 
          err("ConstantValue has to be CONSTANT_Integer for boolean field %s", f->name->buf);
-        f->val.byte = pe->elem.integer;
+        f->stat_val.byte = pe->elem.integer;
         break;
       }
    }

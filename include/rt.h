@@ -27,12 +27,21 @@ typedef struct {
 } array;
 array* new_array(i4 size, u1 type);
 
+typedef struct {
+  u4 id;
+  string* class;
+  list* fields;
+  list* methods;
+} inst;
+inst* new_inst(class* c);
+field* get_inst_field(inst* c, char* name);
+
 typedef union {
   i4 integer;
   float flt;
   i8 lng;
   double dbl;
-  class* ref;
+  inst* ref;
   array* arr;
 } elem_val;
 

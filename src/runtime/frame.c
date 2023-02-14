@@ -23,8 +23,6 @@ frame* new_frame(method* m, list* cp, string* class) {
 }
 
 void push(frame* f, elem* data) {
-  if (!data) 
-    err("Can't push null value to stack");
   attrs* c = get(f->mt->attrs, 0);
   if (f->stack->len == code(c).stack) 
     err("Stack overflow while executing method %s%s", f->mt->name->buf, f->mt->desc->buf);

@@ -46,6 +46,9 @@ int main(int argc, char* argv[]) {
     }
     default_init(app);
     load_jar(app->syslib);
+    class* sys = get_class("java/lang/System");
+    field* out = get_field(sys, "out");
+    out->stat_val.refer = get_class("java/io/PrintStream");
     class* c = get_class(argv[argc - 1]);
     method* m = get_method(c, "main","()V");
     if (m == NULL) 

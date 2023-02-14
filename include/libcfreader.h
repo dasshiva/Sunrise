@@ -82,12 +82,7 @@ typedef struct {
 } attrs;
 list* init_attrs(handle* h, list* cpool, u2 len);
 
-typedef struct {
-  u2 flags;
-  string* name;
-  string* desc;
-  u1 check_val;
-  union {
+typedef union {
     i1 byte;
     i2 sht;
     i2 chr;
@@ -97,7 +92,15 @@ typedef struct {
     double dbl;
     void* refer;
     u1 bool;
-  } val;
+} val;
+
+typedef struct {
+  u2 flags;
+  string* name;
+  string* desc;
+  u1 check_val;
+  val stat_val;
+  val dyn_val;
   u2 attrs_count;
   list* attrs;
 } field;
