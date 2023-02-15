@@ -141,6 +141,19 @@ elem* exec(frame* f) {
         push(f, e);
         break;
       }
+      case 50 : { // aaload
+        elem* index = pop(f);
+        if (index->t != INT) 
+          err("aaload used but index is not int");
+        elem* ref = pop(f);
+        if (ref->t != ARRAY)
+          err("aaload used but arrayref is not an array reference");
+        array* arr = ref->data.arr;
+        if (index->data.integer >= arr->size)
+          err("Array access index is more than array len");
+        push(f, get(arr->data, index->data.integer));
+        break;
+      }
       // dstore
       case 57: {
         u1 delta = safe_get(code, ++pc, len);
@@ -412,13 +425,16 @@ elem* exec(frame* f) {
         break; 
       }
       case 182: // invokevirtual
-      case 183: { // invokespecial
+      case 183: // invokespecial
+      case 184: { // invokestatic
         u2 index;
         make(index);
-        elem* self = pop(f);
+        elem* self;
+        if (code[pc] != 184)
+          self = pop(f);
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != MREF) 
-          err("%s used but element at index is not a method reference", (code[pc] - 182 == 0) ? "invokevirtual" : "invokespecial");
+          err("%s used but element at index is not a method reference", (code[pc] - 182 == 0) ? "invokevirtual" : (code[pc] - 182 == 1) ? "invokespecial" : "invokestatic");
         mfiref_elem* mref = pe->elem.mref;
         class *c = NULL;
         if (code[pc] == 182) 
@@ -433,12 +449,16 @@ elem* exec(frame* f) {
         frame* mt = new_frame(m, c->cp, c->this_class);
         elem* e = NULL;
         if (!mt) {
-          push(f, self);
+          if (code[pc] != 184)
+            push(f, self);
           e = native_call(f, get_utf8(f->cp, nte->name), 0);
         }
         else {
-          set(mt->lvarray, 0, self);
-          for (u2 i = 1; i < mt->args + 1; i++) {
+          if (code[pc] != 184)
+            set(mt->lvarray, 0, self);
+          if (code[pc] != 184)
+            mt->args++;
+          for (u2 i = (code[pc] == 184) ? 0 : 1; i < mt->args; i++) {
             set(mt->lvarray, i, pop(f));
           }
           e = exec(mt);
@@ -483,7 +503,7 @@ elem* exec(frame* f) {
       }
       default: err("Unrecognised or unimplemented opcode %d", code[pc]);
     }
-    //stack_trace(f);
+    // stack_trace(f);
     pc++;
   }
 end:

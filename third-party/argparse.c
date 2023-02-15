@@ -258,7 +258,6 @@ argparse_parse(struct argparse *self, int argc, const char **argv)
         // if '--' presents
         if (!arg[2]) {
             self->argc--;
-            self->argv++;
             break;
         }
         // long option
@@ -283,7 +282,7 @@ end:
             self->argc * sizeof(*self->out));
     self->out[self->cpidx + self->argc] = NULL;
 
-    return self->cpidx + self->argc;
+    return self->cpidx;
 }
 
 void

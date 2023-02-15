@@ -163,5 +163,5 @@ field* get_field(class* c, char* name) {
     if (equals(f->name, name))
       return f;
   }
-  return NULL;
+  err("Field %s.%s not found", c->this_class->buf, name);
 }

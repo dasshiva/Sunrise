@@ -1,0 +1,20 @@
+Sunrise - A Java Virtual Machine(JVM) implementation in C
+
+Sunrise is a barebones implementation written mainly with the intention of 
+learning more about how Java and the JVM works under the hood. It is single 
+threaded and lacks several features and last but not the least has more bugs
+than I could count with my fingers. Regardless, it can perform basic operations
+and supports all primitive and reference data types. It also has a standard
+library (found inside the syslib directory). You should note that this VM does 
+not work with the library that comes with the jdk. It is by no means something
+you use in production. Nevertheless reading the code can give you an idea of
+how VMs work in general. 
+
+Sunrise was developed and tested on Linux and is guaranteed to work on Linux.
+I am not aware if it works on Windows as I do not have a Windows machine at hand
+currently.
+
+Sunrise is licensed under the MIT License a copy of which you can find in the
+LICENSE file. 
+
+Copyright (C) 2023 Shivashish Das

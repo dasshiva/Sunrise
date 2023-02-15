@@ -1,12 +1,13 @@
 #include <rt.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define expect(val, type) \
   if (val->t != type) \
    err("Expected value to be of type %s", #type)
  
 static char* natives[] = {
-  "hashCode", "print", "println", NULL
+  "hashCode", "print", "println", "exit", NULL
 };
 
 elem* native_call(frame* inv, string* name, int stat) {
@@ -16,7 +17,6 @@ elem* native_call(frame* inv, string* name, int stat) {
     if (!func) 
       err("Native method %s not found", name->buf);
     if (equals(name, natives[i])) {
-      dbg("%d", i);
       switch (i) {
         case 0: {
           dbg("Native method java/lang/Object.hashCode() starting");
@@ -48,6 +48,13 @@ elem* native_call(frame* inv, string* name, int stat) {
             fprintf(stdout, "\n");
           dbg("Native method java/lang/String.%s ended", (i == 2) ? "println" : "print");
           break;
+        }
+        case 3: {
+          dbg("Native method java/lang/System.exit() started");
+          elem* e = pop(inv);
+          if (e->t != INT)
+            err("Method exit() expects int argument");
+          exit(e->data.integer);
         }
       }
       break;
