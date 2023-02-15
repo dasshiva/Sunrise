@@ -29,6 +29,20 @@ elem* exec(frame* f) {
   for (i8 pc = 0, instr = 0; pc < len; ) {
     instr = pc;
     switch (safe_get(code, pc, len)) {
+      // iconst_<n>
+      case 2:
+      case 3:
+      case 4: 
+      case 5:
+      case 6:
+      case 7:
+      case 8: {
+        elem* e = GC_MALLOC(sizeof(elem));
+        e->t = INT;
+        e->data.integer = code[pc] - 3;
+        push(f, e);
+        break;
+      }
       case 16: {
         elem* e = GC_MALLOC(sizeof(elem));
         e->t = INT;
@@ -101,6 +115,18 @@ elem* exec(frame* f) {
             break;
           }
         }
+        break;
+      }
+      // iload_<n>
+      case 26: 
+      case 27:
+      case 28:
+      case 29: {
+        u1 delta = code[pc] - 26;
+        elem* e = get(f->lvarray, delta);
+        if (e->t != INT)
+          err("iload_<%d> used but index at local variable array is not int", delta);
+        push(f, e);
         break;
       }
       // aload_<n>
@@ -201,15 +227,52 @@ elem* exec(frame* f) {
         push(f, new);
         break;
       }
+      case 132: {
+        u1 index = safe_get(code, ++pc, len);
+        u1 con = safe_get(code, ++pc, len);
+        elem* e = get(f->lvarray, index);
+        if (e->t != INT)
+          err("iinc used but element at index is not int");
+        e->data.integer += (i4) con;
+        break;
+      }
+      case 159: // if_icmpeq
+      case 160: // if_icmpne
+      case 161: // if_icmplt
+      case 162: // if_icmpge
+      case 163: // if_icmpgt
+      case 164: { // if_icmple
+        elem* val2 = pop(f);
+        elem* val1 = pop(f);
+        if (val1->t != INT || val2->t != INT)
+          err("if_icmpgt used but arguments are not ints");
+        u1 res = 0;
+        switch (code[pc] - 159) {
+          case 0: res = val1->data.integer == val2->data.integer; break;
+          case 1: res = val1->data.integer != val2->data.integer; break;
+          case 2: res = val1->data.integer < val2->data.integer; break;
+          case 3: res = val1->data.integer >= val2->data.integer; break;
+          case 4: res = val1->data.integer > val2->data.integer; break;
+          case 5: res = val1->data.integer <= val2->data.integer; break;
+          default: err("Unreachable");
+        }
+        if (res) {
+          i2 offset;
+          make(offset);
+          instr += offset;
+          pc = instr;
+          continue;
+        }
+        pc += 2;
+        break;
+      }
       case 167: { // goto
         i2 offset;
         make(offset);
         if ((i2)pc - offset <= 0)
           err("Offset to jump %d causes pc underflow", offset);
-        dbg("%d", offset);
         instr += offset;
         pc = instr;
-        dbg("%d", pc);
         continue;
       }
       case 177: goto end; // return 
@@ -352,14 +415,16 @@ elem* exec(frame* f) {
       case 183: { // invokespecial
         u2 index;
         make(index);
+        elem* self = pop(f);
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != MREF) 
           err("%s used but element at index is not a method reference", (code[pc] - 182 == 0) ? "invokevirtual" : "invokespecial");
         mfiref_elem* mref = pe->elem.mref;
-        pool_elem* cl = get_elem(f->cp, mref->class);
-        if (cl->tag != CLASS) 
-          err("class index of method ref does not point to valid class");
-        class* c = get_class(get_utf8(f->cp, cl->elem.class)->buf);
+        class *c = NULL;
+        if (code[pc] == 182) 
+          c = get_class(self->data.ref->class->buf);
+        else 
+          c = get_class(get_utf8(f->cp, mref->class)->buf);
         pool_elem* nt = get_elem(f->cp, mref->nt);
         if (nt->tag != NTYPE) 
           err("name type index of method ref does not point to valid name type structure");
@@ -368,10 +433,11 @@ elem* exec(frame* f) {
         frame* mt = new_frame(m, c->cp, c->this_class);
         elem* e = NULL;
         if (!mt) {
+          push(f, self);
           e = native_call(f, get_utf8(f->cp, nte->name), 0);
         }
         else {
-          set(mt->lvarray, 0, pop(f));
+          set(mt->lvarray, 0, self);
           for (u2 i = 1; i < mt->args + 1; i++) {
             set(mt->lvarray, i, pop(f));
           }

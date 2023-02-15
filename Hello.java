@@ -1,6 +1,11 @@
 public class Hello {
 	private static int length;
 	public static void main() {
-		System.out.println("Hello World");
+		for(int i = 1; i <= 5; i++) {
+			for (int j = 0; j < i; j++) {
+				System.out.print("*");
+			}
+			System.out.println(" ");
+		}
 	}
 }

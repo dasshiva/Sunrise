@@ -154,7 +154,7 @@ method* get_method(class* c, char* name, char* desc) {
     if (equals(m->name, name) && equals(m->desc, desc)) 
       return m;
   }
-  return NULL;
+  err("Method %s.%s %s not found", c->this_class->buf, name, desc);
 }
 
 field* get_field(class* c, char* name) {
