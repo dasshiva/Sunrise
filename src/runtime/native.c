@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 extern list* stack;
+extern char* except;
 #define expect(val, type) \
   if (val->t != type) \
    err("Expected value to be of type %s", #type)
@@ -63,8 +64,12 @@ elem* native_call(frame* inv, string* name, int stat) {
           break;
         }
         case 4: {
+          if (except) {
+            fprintf(stderr, "UNCAUGHT EXCEPTION: %s\n", except);
+            fprintf(stderr, "Caused by: ");
+          }
           fprintf(stderr, "%s\n\nStack trace:\n", tostring(pop(inv))->buf);
-          for (int i = stack->len - 2; i >= 0; i--) {
+          for (int i = stack->len - 1; i >= 0; i--) {
             frame* f = get(stack, i);
             fprintf(stderr, "  at %s.%s %s\n", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
           }

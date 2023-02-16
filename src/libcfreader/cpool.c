@@ -110,6 +110,22 @@ list* new_cpool(handle* h, u2 len) {
         pelem->elem.nt = nelem;
         break;
       }
+      case MHANDLE: {
+        mhandle_elem* handle = GC_MALLOC(sizeof(mhandle_elem));
+        handle->ref_kind = get_u1(h);
+        handle->ref_index = get_u2(h);
+        if (handle->ref_kind > 9 || handle->ref_kind < 1)
+          err("Illegal method handle value %d", handle->ref_kind);
+        pelem->elem.handle = handle;
+        break;
+      }
+      case INVDYN: {
+        invdyn_elem* in = GC_MALLOC(sizeof(invdyn_elem));
+        in->bmeth = get_u2(h);
+        in->nt = get_u2(h);
+        pelem->elem.inv = in;
+        break;
+      }
       default: err("Unknown tag: %d", tag);
     }
     add(p, pelem);

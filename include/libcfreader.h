@@ -25,7 +25,9 @@ void skip(handle* h, u4 amt);
 #define FIELD 9 // CONSTANT_FieldRef
 #define MREF 10 // CONSTANT_MethodRef
 #define NTYPE 12 // CONSTANT_NameAndType
+#define MHANDLE 15// CONSTANT_MethodHandle
 #define MTYPE 16 // CONSTANT_MethodType
+#define INVDYN 18 // CONSTANT_InvokeDynamic
 #define EMP 20 // This is for empty elements such as the element after a long or double in the constant pool
 
 typedef struct {
@@ -38,6 +40,16 @@ typedef struct {
   u2 class;
   u2 nt;
 } mfiref_elem;
+
+typedef struct {
+  u1 ref_kind;
+  u2 ref_index;
+} mhandle_elem;
+
+typedef struct {
+  u2 bmeth;
+  u2 nt;
+} invdyn_elem;
 
 typedef struct {
   u1 tag;
@@ -53,6 +65,8 @@ typedef struct {
     i8 lng; // long element
     float flt; // float element
     double dbl; // double element 
+    invdyn_elem* inv;
+    mhandle_elem* handle;
   } elem;
 } pool_elem;
 

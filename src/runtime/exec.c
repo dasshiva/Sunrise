@@ -16,6 +16,8 @@ static inline Type as_needed(Type t) {
     default: return t;
   }
 }
+
+char* except = NULL;
 static inline u1 safe_get(u1* buf, u2 index, u2 len) {
   if (index >= len) 
     err("Invalid access into array with index %d when length is %d");
@@ -165,7 +167,7 @@ elem* exec(frame* f) {
       case 29: {
         u1 delta = code[pc] - 26;
         elem* e = get(f->lvarray, delta);
-        if (e->t != INT)
+        if (e->t != INT && e->t != BOOL && e->t != CHAR && e->t != SHORT)
           err("iload_<%d> used but index at local variable array is not int", delta);
         push(f, e);
         break;
@@ -190,7 +192,27 @@ elem* exec(frame* f) {
         if (ref->t != ARRAY)
           err("aaload used but arrayref is not an array reference");
         array* arr = ref->data.arr;
+        if (!arr)
+          throw("java.lang.NullPointerException", "Array is null");
         if (index->data.integer >= arr->size) {
+          throw("java.lang.ArrayIndexOutOfBoundsException", fmt_str("Array access index %d is equal to or more than array length %d", index->data.integer, arr->size)->buf);
+          break;
+        }
+        push(f, get(arr->data, index->data.integer));
+        break;
+      }
+      
+      case 52: { // caload
+        elem* index = pop(f);
+        if (index->t != INT) 
+          err("caload used but index is not int");
+        elem* ref = pop(f);
+        if (ref->t != ARRAY)
+          err("caload used but arrayref is not an array reference");
+        array* arr = ref->data.arr;
+        if (!arr)
+          throw("java.lang.NullPointerException", "Array is null");
+        else if (index->data.integer >= arr->size) {
           throw("java.lang.ArrayIndexOutOfBoundsException", fmt_str("Array access index %d is equal to or more than array length %d", index->data.integer, arr->size)->buf);
           break;
         }
@@ -214,7 +236,7 @@ elem* exec(frame* f) {
       case 62: {
         u1 delta = code[pc] - 59;
         elem* e = pop(f);
-        if (e->t != INT) 
+        if (e->t != INT && e->t != BOOL && e->t != CHAR && e->t != SHORT) 
           err("istore_<%d> used but stack top is not int", delta);
         set(f->lvarray, delta, e);
         break;
@@ -268,6 +290,24 @@ elem* exec(frame* f) {
         set(f->lvarray, delta, e);
         break;
       }
+      case 85: { // castore
+        elem* val = pop(f);
+        elem* index = pop(f);
+        if (index->t != INT) 
+          err("caload used but index is not int");
+        elem* ref = pop(f);
+        if (ref->t != ARRAY)
+          err("caload used but arrayref is not an array reference");
+        array* arr = ref->data.arr;
+        if (!arr)
+          throw("java.lang.NullPointerException", "Array is null");
+        else if (index->data.integer >= arr->size) {
+          throw("java.lang.ArrayIndexOutOfBoundsException", fmt_str("Array access index %d is equal to or more than array length %d", index->data.integer, arr->size)->buf);
+          break;
+        }
+        set(arr->data, index->data.integer, val);
+        break;
+      }
       // dup
       case 89: {
         elem* e = get(f->stack, f->stack->len - 1);
@@ -279,6 +319,7 @@ elem* exec(frame* f) {
           case LONG: new->data.lng = e->data.lng; break;
           case DOUBLE: new->data.dbl = e->data.dbl; break;
           case REF: new->data.ref = e->data.ref; break;
+          case ARRAY: new->data.arr = e->data.arr; break;
         }
         push(f, new);
         break;
@@ -331,7 +372,8 @@ elem* exec(frame* f) {
         pc = instr;
         continue;
       }
-      case 177: goto end; // return 
+      case 172: // ireturn
+      case 177: goto end; // return
       case 178: // getstatic 
       case 180: { // getfield
         u2 index;
@@ -341,18 +383,17 @@ elem* exec(frame* f) {
           err("getstatic used but constant pool ref is not valid field ref");
         mfiref_elem* fref = pe->elem.fref;
         //pool_elem* cl = get_elem(f->cp, fref->class);
-        dbg("%s", get_utf8(f->cp, fref->class)->buf);
         class* c = get_class(get_utf8(f->cp, fref->class)->buf);
         pool_elem* nt = get_elem(f->cp, fref->nt);
         if (nt->tag != NTYPE) 
           err("name type index of field ref does not point to valid name type structure");
         ntype_elem* nte = nt->elem.nt;
         field* fe = NULL; 
-        if (code[pc] == 178)
+        if (code[instr] == 178)
           fe = get_field(c, get_utf8(f->cp, nte->name)->buf);
         else {
-          elem* e = pop(f);
-          fe = get_inst_field(e->data.ref, get_utf8(f->cp, nte->name)->buf);
+          elem* ef = pop(f);
+          fe = get_inst_field(ef->data.ref, get_utf8(f->cp, nte->name)->buf);
         }
         elem* e = GC_MALLOC(sizeof(elem));
         switch (fe->desc->buf[0]) {
@@ -499,6 +540,8 @@ elem* exec(frame* f) {
           e = native_call(f, get_utf8(f->cp, nte->name), 0);
         }
         else {
+          if (code[pc] != 184)
+            mt->args++; 
           for (u2 i = (code[pc] == 184) ? 0 : 1; i < mt->args; i++) {
             set(mt->lvarray, i, pop(f));
           }
@@ -517,6 +560,25 @@ elem* exec(frame* f) {
        pool_elem* pe = get_elem(f->cp, index);
        if (pe->tag != CLASS) 
          err("new used but index does not point to valid constant pool class ref");
+       class* super = get_class(get_utf8(f->cp, pe->elem.class)->buf);
+      while(1) {
+         if (equals(super->super_class, "java/lang/Exception")) {
+           string* name = new_str(get_utf8(f->cp, pe->elem.class)->buf);
+           while(1) {
+             int index = find(name, '/');
+             if (index == -1)
+               break;
+             name->buf[index] = '.';
+           }
+           except = name->buf;
+           break;
+         }
+         else if (equals(super->super_class, "syslib/VMObj")) {
+           break;
+         }
+         else 
+           super = get_class(super->super_class->buf);
+       } 
        push(f, new_obj(get_utf8(f->cp, pe->elem.class)->buf));
         break;
       }
@@ -542,7 +604,7 @@ elem* exec(frame* f) {
       }
       default: err("Unrecognised or unimplemented opcode %d", code[pc]);
     }
-    stack_trace(f);
+    //stack_trace(f);
     pc++;
   }
 end:
@@ -553,8 +615,8 @@ end:
    }
    else {
      elem* ret = pop(f);
-     if (as_needed(f->ret) != ret->t) 
-       err("Return type doesn't match with actual element to return");
+     if (as_needed(f->ret) != as_needed(ret->t))
+       err("Return type doesn't match with actual element to return"); 
      delete(stack, stack->len - 1);
      return ret;
    }

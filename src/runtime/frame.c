@@ -50,6 +50,7 @@ static void parse_desc(frame* f) {
     params = substr(desc, 1, end);
   if (params) {
     for (u2 i = 0; i < params->len; i++) {
+      //dbg("%d", arg);
       switch(params->buf[i]) {
         case 'B':
         case 'C':
@@ -87,9 +88,9 @@ static void parse_desc(frame* f) {
           break;
         }
         case '[': {
-          if (at(desc, i + 1) == '[') 
+          if (at(params, i + 1) == '[') 
             err("Multidimensional arrays not supported");
-          else if (at(desc, i + 1) == 'L') {
+          else if (at(params, i + 1) == 'L') {
             int semi = find(params, ';');
             if (semi + 1 != end) {
               i = 0;
@@ -99,7 +100,7 @@ static void parse_desc(frame* f) {
               i = semi;
           }
           else
-             i += 2;
+             i += 1;
           elem* e = get(f->lvarray, arg++);
           e->t = ARRAY;
           break;

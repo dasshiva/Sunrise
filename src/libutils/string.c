@@ -99,7 +99,7 @@ string* substr(string* s, const u4 start, const u4 end) {
   for (u4 i = start, j = 0; i < end; i++, j++) {
     str->buf[j] = s->buf[i];
   }
-  return s;
+  return str;
 }
 
 char at(string *s, u4 index) {

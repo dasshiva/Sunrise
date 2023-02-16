@@ -10,7 +10,7 @@ public class VMStr extends VMObj {
 	
 	public char charAt(int index) {
 	  if (index >= buffer.length) 
-	    throw new StringIndexOutOfBoundsException("Index is " + index + " but length is " + buffer.length);
+	    throw new StringIndexOutOfBoundsException("Index is more than or equal to String length");
 	  return buffer[index];
 	}
 }
