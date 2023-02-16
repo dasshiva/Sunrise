@@ -1,6 +1,7 @@
 #include <include/rt.h>
 #include <stdlib.h>
 
+extern list* stack;
 static void parse_desc(frame* f);
 
 frame* new_frame(method* m, list* cp, string* class) {
@@ -19,6 +20,7 @@ frame* new_frame(method* m, list* cp, string* class) {
   f->mt = m;
   f->cp = cp;
   parse_desc(f);
+  add(stack, f);
   return f;
 }
 

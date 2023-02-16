@@ -1,5 +1,6 @@
 #include <include/rt.h>
 
+extern list* stack;
 #define make(res) \
    u1 byte1 = safe_get(code, ++pc, len); \
    u1 byte2 = safe_get(code, ++pc, len); \
@@ -21,17 +22,47 @@ static inline u1 safe_get(u1* buf, u2 index, u2 len) {
   return buf[index];
 }
 
-void new_obj(frame* f, char* cls) {
+elem* exec(frame* f);
+elem* new_obj(char* cls) {
    class* c = get_class(cls);
    elem* e = GC_MALLOC(sizeof(elem));
    e->t = REF;
    e->data.ref = new_inst(c);
-   push(f, e);
+   return e;
 }
 
-void throw(frame* f, char* cls, char* msg) {
-  new_obj(f, cls);
-  
+void throw(char* cls, char* msg) {
+  class* ex = get_class("java/lang/Exception");
+  string* str = new_str(cls);
+  append(str, ';');
+  concat(str, msg);
+  class* c = get_class("java/lang/String");
+  method* init = get_method(c, "<init>", "([C)V");
+  elem* self = GC_MALLOC(sizeof(elem));
+  self->t = REF;
+  self->data.ref = new_inst(c);
+  elem* arg = GC_MALLOC(sizeof(elem));
+  arg->t = ARRAY;
+  arg->data.arr = new_array(str->len, 5);
+  for (u2 i = 0; i < str->len; i++) {
+    elem* el = get(arg->data.arr->data, i);
+    el->data.integer = at(str, i);
+  }
+  frame* ctr = new_frame(init, c->cp, new_str("java/lang/String"));
+  set(ctr->lvarray, 0, self);
+  set(ctr->lvarray, 1, arg);
+  exec(ctr);
+  method* exinit = get_method(ex, "<init>", "(Ljava/lang/String;)V");
+  frame* exctr = new_frame(exinit, ex->cp, ex->this_class);
+  elem* exself = GC_MALLOC(sizeof(elem));
+  exself->t = REF;
+  exself->data.ref = new_inst(c);
+  elem* exarg = GC_MALLOC(sizeof(elem));
+  exarg->t = REF;
+  exarg->data.ref = self;
+  set(exctr->lvarray, 0, exself);
+  set(exctr->lvarray, 1, exarg);
+  exec(exctr);
 }
 elem* exec(frame* f) {
   dbg("Starting method %s.%s with signature %s", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
@@ -162,7 +193,7 @@ elem* exec(frame* f) {
           err("aaload used but arrayref is not an array reference");
         array* arr = ref->data.arr;
         if (index->data.integer >= arr->size) {
-          new_obj(f, "java/lang/ArrayIndexOutOfBoundsException");
+          throw("java.lang.ArrayIndexOutOfBoundsException", "Array access index is more than array len");
           break;
         }
         push(f, get(arr->data, index->data.integer));
@@ -488,7 +519,7 @@ elem* exec(frame* f) {
        pool_elem* pe = get_elem(f->cp, index);
        if (pe->tag != CLASS) 
          err("new used but index does not point to valid constant pool class ref");
-       new_obj(f, get_utf8(f->cp, pe->elem.class)->buf);
+       push(f, new_obj(get_utf8(f->cp, pe->elem.class)->buf));
         break;
       }
       case 188: { // newarray
@@ -518,12 +549,15 @@ elem* exec(frame* f) {
   }
 end:
    dbg("Method %s.%s with descriptor %s finished successfully", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
-   if (f->ret == EMPTY)
+   if (f->ret == EMPTY) {
+     delete(stack, stack->len - 1);
      return NULL;
+   }
    else {
      elem* ret = pop(f);
      if (as_needed(f->ret) != ret->t) 
        err("Return type doesn't match with actual element to return");
+     delete(stack, stack->len - 1);
      return ret;
    }
 }

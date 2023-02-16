@@ -11,7 +11,8 @@ Usage : \n\
 -s - Specify syslib.jar location (By default searches in current directory\n\
 Use -- to separate arguments to the vm and the program\n";
 
-config* app;
+config* app = NULL;
+list* stack = NULL;
 void prepare_args(frame* f, int argc, char* argv[], int total);
 
 static void default_init(config* app) {
@@ -70,6 +71,7 @@ int main(int argc, char* argv[]) {
     out->stat_val.refer = get_class("java/io/PrintStream");
     class* c = get_class(app->main);
     method* m = get_method(c, "main","([Ljava/lang/String;)V");
+    stack = new_list();
     frame* f = new_frame(m, c->cp, c->this_class);
     prepare_args(f, argc, argv, total);
     exec(f);

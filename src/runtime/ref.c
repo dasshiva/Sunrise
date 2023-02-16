@@ -19,12 +19,13 @@ inst* new_inst(class* c) {
 }
 
 field* get_inst_field(inst* c, char* name) {
+  dbg("%d",  c->fields == NULL);
   for (u2 i = 0; i < c->fields->len; i++) {
     field* f = get(c->fields, i);
     if (equals(f->name, name))
       return f;
   }
-  return NULL;
+  err("Field %s not found", name);
 }
 
 array* new_array(i4 size, u1 type) {

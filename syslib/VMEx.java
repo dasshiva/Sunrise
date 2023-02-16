@@ -1,9 +1,8 @@
 package syslib;
 
 public class VMEx extends VMThrow {
-  private String message;
-  public VMEx() {}
+  private static native void throwEx(String message);
   public VMEx(String msg) {
-    message = msg;
+    throwEx(msg);
   }
 }

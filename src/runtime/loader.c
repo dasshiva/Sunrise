@@ -7,12 +7,12 @@
 #define init_list() \
  if(classes == NULL) \
  classes = new_list()
-#define SYSLIB_SZ 9
+#define SYSLIB_SZ 8
 static list* classes = NULL;
 static int is_loaded(string* name);
 char* syslib[2][SYSLIB_SZ] = {
-  { "java/lang/Object", "java/lang/String", "java/lang/System", "java/io/PrintStream", "java/lang/Throwable", "java/lang/Exception", "java/lang/RuntimeException", "java/lang/ArrayIndexOutOfBoundsException", NULL}, 
-  { "syslib/VMObjExt", "syslib/VMStr", "syslib/VMSys", "syslib/VMPrtStream", "syslib/VMThrow", "syslib/VMEx", "syslib/VMRtEx", "syslib/VMArrIndEx", NULL }
+  { "java/lang/Object", "java/lang/String", "java/lang/System", "java/io/PrintStream", "java/lang/Exception", "java/lang/RuntimeException", "java/lang/ArrayIndexOutOfBoundsException", NULL}, 
+  { "syslib/VMObjExt", "syslib/VMStr", "syslib/VMSys", "syslib/VMPrtStream", "syslib/VMEx", "syslib/VMRtEx", "syslib/VMArrIndEx", NULL }
 };
 
 class* get_class(char* file) {
@@ -57,7 +57,7 @@ int load_jar(char* file) {
           add(classes, c);
           break;
         }
-        else if (equals(c->this_class, "syslib/VMObj")) {
+        else if (equals(c->this_class, "syslib/VMObj") || equals(c->this_class, "syslib/VMThrow")) {
           add(classes, c);
         }
       }
