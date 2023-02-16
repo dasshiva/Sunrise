@@ -1,9 +1,6 @@
-#include <stdio.h>
 #include <include/rt.h>
 #include <signal.h>
-#include <execinfo.h>
 #include <stdlib.h>
-#include <argparse.h>
 #include <include/config.h>
 
 static char* usage = "Sunrise - A Java Virtual Machine Implementation\n\
