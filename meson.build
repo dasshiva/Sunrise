@@ -2,7 +2,7 @@ project('sunrise', ['c'],
   version : '0.1',
   default_options : ['warning_level=3'])
 src = ['src/main.c', 'src/runtime/loader.c', 'src/runtime/frame.c', 'src/runtime/exec.c', 'src/runtime/ref.c', 'src/runtime/native.c']
-thirdparty = ['third-party/argparse.c', 'third-party/zip.c']
+thirdparty = ['third-party/zip.c']
 libutilssrc = ['src/libutils/string.c', 'src/libutils/list.c', 'src/libutils/log.c']
 libutils = static_library('libutils', libutilssrc)
 libcfreadersrc = ['src/libcfreader/file.c', 'src/libcfreader/class.c', 'src/libcfreader/cpool.c', 'src/libcfreader/attrs.c']

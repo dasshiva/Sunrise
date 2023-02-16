@@ -6,11 +6,19 @@ import java.io.FileOutputStream;
 public class Make
 {
     public static void main(String[] args) throws Exception {
-        DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(args[0]));
+        writeClass("syslib/VMObj", null);
+	writeClass("syslib/VMThrow", "java/lang/Throwable");
+    }
+
+    public static void writeClass(String cls, String sup) throws Exception {
+        DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(cls + ".class"));
         dataOutputStream.writeInt(0xCAFEBABE); // magic
         dataOutputStream.writeShort(0); // minor version 
         dataOutputStream.writeShort(61); // major version (Java 17)
-        dataOutputStream.writeShort(6); // Constant Pool Length
+	if (sup != null) 
+	  dataOutputStream.writeShort(8);
+	else 
+          dataOutputStream.writeShort(6); // Constant Pool Length
         String s = "<init>"; // Element 1 - String <init>
         dataOutputStream.writeByte(1);
         dataOutputStream.writeShort(s.length());
@@ -25,7 +33,7 @@ public class Make
         for (int length2 = charArray2.length, j = 0; j < length2; ++j) {
             dataOutputStream.writeByte((byte)charArray2[j]);
         }
-        final String s3 = "syslib/VMObj"; // Element 3 - String syslib/VMObj
+        final String s3 = cls; 
         dataOutputStream.writeByte(1);
         dataOutputStream.writeShort(s3.length());
         char[] charArray3 = s3.toCharArray();
@@ -41,9 +49,23 @@ public class Make
         }
         dataOutputStream.writeByte(7); // Element 5 - Class 
         dataOutputStream.writeShort(3); 
+	if (sup != null) {
+          String str = sup; // Element 4 - String Code
+          dataOutputStream.writeByte(1);
+          dataOutputStream.writeShort(str.length());
+	  char[] chararr = str.toCharArray();
+	  for (int length = chararr.length, l = 0; l < length; ++l) {
+            dataOutputStream.writeByte((byte)chararr[l]);
+          }
+	  dataOutputStream.writeByte(7);
+	  dataOutputStream.writeShort(6);
+	}
         dataOutputStream.writeShort(0x0001); // Class access flags 
         dataOutputStream.writeShort(5); // This class 
-        dataOutputStream.writeShort(0); // Super class
+	if (sup != null) 
+          dataOutputStream.writeShort(7); // Super class
+        else 
+          dataOutputStream.writeShort(0);
         dataOutputStream.writeShort(0); // No interfaces
         dataOutputStream.writeShort(0); // No fields
         dataOutputStream.writeShort(1); // One method 
@@ -60,5 +82,6 @@ public class Make
         dataOutputStream.writeShort(0); // Code exception table length
         dataOutputStream.writeShort(0); // Code attributes
         dataOutputStream.writeShort(0); // File attributes
+        dataOutputStream.flush();
     }
 }

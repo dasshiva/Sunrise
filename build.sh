@@ -11,6 +11,7 @@ if [[ "$0" == "full-build.sh" ]]; then
         done
 	rm syslib/Make.class
 	jar cf syslib.jar syslib/*.class
+	rm syslib/*.class
 fi
 mv build/sun .
 ./sun -h
