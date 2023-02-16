@@ -21,6 +21,18 @@ static inline u1 safe_get(u1* buf, u2 index, u2 len) {
   return buf[index];
 }
 
+void new_obj(frame* f, char* cls) {
+   class* c = get_class(cls);
+   elem* e = GC_MALLOC(sizeof(elem));
+   e->t = REF;
+   e->data.ref = new_inst(c);
+   push(f, e);
+}
+
+void throw(frame* f, char* cls, char* msg) {
+  new_obj(f, cls);
+  
+}
 elem* exec(frame* f) {
   dbg("Starting method %s.%s with signature %s", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
   attrs* code_attr = (attrs*) get(f->mt->attrs, 0);
@@ -149,8 +161,10 @@ elem* exec(frame* f) {
         if (ref->t != ARRAY)
           err("aaload used but arrayref is not an array reference");
         array* arr = ref->data.arr;
-        if (index->data.integer >= arr->size)
-          err("Array access index is more than array len");
+        if (index->data.integer >= arr->size) {
+          new_obj(f, "java/lang/ArrayIndexOutOfBoundsException");
+          break;
+        }
         push(f, get(arr->data, index->data.integer));
         break;
       }
@@ -469,16 +483,12 @@ elem* exec(frame* f) {
         break;
       }
       case 187: { // new
-        u2 index;
-        make(index);
-        pool_elem* pe = get_elem(f->cp, index);
-        if (pe->tag != CLASS) 
-          err("new used but index does not point to valid constant pool class ref");
-        class* c = get_class(get_utf8(f->cp, pe->elem.class)->buf);
-        elem* e = GC_MALLOC(sizeof(elem));
-        e->t = REF;
-        e->data.ref = new_inst(c);
-        push(f, e);
+       u2 index;
+       make(index);
+       pool_elem* pe = get_elem(f->cp, index);
+       if (pe->tag != CLASS) 
+         err("new used but index does not point to valid constant pool class ref");
+       new_obj(f, get_utf8(f->cp, pe->elem.class)->buf);
         break;
       }
       case 188: { // newarray
