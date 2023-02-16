@@ -11,14 +11,10 @@ Copyright (C) 2023 Shivashish Das \n\n\
 Usage : \n\
 -h - Print this help menu \n\
 -d - Output debug logs \n\
--sys - Specify syslib.jar location (By default searches in current directory\n\
-";
+-s - Specify syslib.jar location (By default searches in current directory\n\
+Use -- to separate arguments to the vm and the program\n";
 
 config* app;
-
-static void parse_args(int argc, char* argv[]) {
-  
-}
 void prepare_args(frame* f, int argc, char* argv[], int total);
 
 static void default_init(config* app) {
@@ -38,8 +34,36 @@ int main(int argc, char* argv[]) {
     char* actual_argv = argv;
     int total = argc;
     app = GC_MALLOC(sizeof(config));
-    
-    if (argc == 0) {
+    app->main = NULL;
+    app->syslib = NULL;
+    for (int i = 1; i < argc; i++) {
+      switch(argv[i][0]) {
+        case '-': {
+          switch (argv[i][1]) {
+            case 'h': fprintf(stdout, "%s", usage); exit(0);
+            case 'd': app->debug = 1; break;
+            case 's': {
+              if (i + 1 == argc) 
+                err("Option -s needs an argument");
+              app->syslib = argv[++i];
+              break;
+            }
+            case '-': argc = i + 1; break;
+            default: 
+            fprintf(stdout, "%s", usage);
+            err("Unrecognised option %s", argv[i]);
+          }
+          break;
+        }
+        default: {
+          if (!app->main) 
+            app->main = argv[i];
+          else 
+            err("Unexpected value %s", argv[i]);
+        }
+      }
+    }
+    if (!app->main) {
       err("Main class name needed");
     }
     default_init(app);
@@ -47,18 +71,18 @@ int main(int argc, char* argv[]) {
     class* sys = get_class("java/lang/System");
     field* out = get_field(sys, "out");
     out->stat_val.refer = get_class("java/io/PrintStream");
-    class* c = get_class(argv[argc]);
+    class* c = get_class(app->main);
     method* m = get_method(c, "main","([Ljava/lang/String;)V");
     frame* f = new_frame(m, c->cp, c->this_class);
-    prepare_args(f, ++argc, argv, total);
+    prepare_args(f, argc, argv, total);
     exec(f);
     return 0;
 }
 
 void prepare_args(frame* f, int argc, char* argv[], int total) {
   array* ret = new_array(total - argc, 12);
-  for (int i = argc, j = 0; i < total - 2; i++, j++) {
-    string* str = new_str(argv[i - 1]);
+  for (int i = argc, j = 0; i < total; i++, j++) {
+    string* str = new_str(argv[i]);
     class* c = get_class("java/lang/String");
     method* init = get_method(c, "<init>", "([C)V");
     elem* self = GC_MALLOC(sizeof(elem));
