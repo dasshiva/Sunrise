@@ -67,4 +67,5 @@ void stack_trace(frame* f);
 #define code(a) a->attr.code
 
 elem* native_call(frame* inv, string* name, int stat);
+void throw(char* cls, char* msg);
 #endif

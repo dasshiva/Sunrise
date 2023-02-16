@@ -20,6 +20,7 @@ string *tostring(elem* arg) {
      elem* e = get(arr->data, i);
      append(str, (char)e->data.integer);
   }
+  return str;
 }
 
 elem* native_call(frame* inv, string* name, int stat) {
@@ -62,11 +63,10 @@ elem* native_call(frame* inv, string* name, int stat) {
           break;
         }
         case 4: {
-          //fprintf(stderr, "%s\n", tostring(pop(inv))->buf);
-          dbg("Here");
+          fprintf(stderr, "%s\n\nStack trace:\n", tostring(pop(inv))->buf);
           for (int i = stack->len - 2; i >= 0; i--) {
             frame* f = get(stack, i);
-            fprintf(stderr, "at %s.%s %s\n", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
+            fprintf(stderr, "  at %s.%s %s\n", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
           }
           exit(1);
           break;

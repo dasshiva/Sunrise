@@ -27,7 +27,7 @@ frame* new_frame(method* m, list* cp, string* class) {
 void push(frame* f, elem* data) {
   attrs* c = get(f->mt->attrs, 0);
   if (f->stack->len == code(c).stack) 
-    err("Stack overflow while executing method %s%s", f->mt->name->buf, f->mt->desc->buf);
+    throw("java.lang.StackOverflowError", "Pushing excess elements to operand stack");
   add(f->stack, data);
 }
 
@@ -128,4 +128,5 @@ void stack_trace(frame* f) {
     elem* e = get(f->stack, i);
     dbg("%d", (e == NULL) ? -1 : e->t);
   }
+  dbg("Stack Trace ended");
 }

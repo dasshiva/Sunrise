@@ -1,5 +1,6 @@
 #include <include/libutils.h>
 #include <string.h>
+#include <stdlib.h>
 
 string* new_str(const char* str) {
   string* s = GC_MALLOC(sizeof(string));
@@ -13,6 +14,35 @@ string* new_str(const char* str) {
 
 string* new_empty_str(void) {
   return new_str("");
+}
+
+string* fmt_str(char* fmt, ...) {
+  string* s = new_empty_str();
+  char* buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  for (u4 i = 0; i < strlen(fmt); i++) {
+    if (fmt[i] != '%') 
+      append(s, fmt[i]);
+    else {
+      switch (fmt[++i]) {
+        case 'd': {
+          int iarg = va_arg(ap, int);
+          snprintf (buf, sizeof(buf), "%d", iarg); 
+          concat(s, buf);
+          memset(buf, 0, 20);
+          break;
+        }
+        case 's': {
+          char* arg = va_arg(ap, char*);
+          concat(s, buf);
+          break;
+        }
+        default: append(s, fmt[i]);
+      }
+    }
+  }
+  return s;
 }
 
 string* str_with_len(u4 len) {

@@ -19,7 +19,8 @@ inst* new_inst(class* c) {
 }
 
 field* get_inst_field(inst* c, char* name) {
-  dbg("%d",  c->fields == NULL);
+ if (c->fields == NULL) 
+   err("Class %s has no instance fields but get_inst_field() called", c->class->buf);
   for (u2 i = 0; i < c->fields->len; i++) {
     field* f = get(c->fields, i);
     if (equals(f->name, name))

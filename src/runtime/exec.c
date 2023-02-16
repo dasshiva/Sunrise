@@ -33,14 +33,13 @@ elem* new_obj(char* cls) {
 
 void throw(char* cls, char* msg) {
   class* ex = get_class("java/lang/Exception");
-  string* str = new_str(cls);
-  append(str, ';');
-  concat(str, msg);
   class* c = get_class("java/lang/String");
+  string* str = new_str("UNCAUGHT EXCEPTION: ");
+  concat(str, cls);
+  concat(str, "\nCaused due to : ");
+  concat(str, msg);
   method* init = get_method(c, "<init>", "([C)V");
-  elem* self = GC_MALLOC(sizeof(elem));
-  self->t = REF;
-  self->data.ref = new_inst(c);
+  elem* self = new_obj("java/lang/String");
   elem* arg = GC_MALLOC(sizeof(elem));
   arg->t = ARRAY;
   arg->data.arr = new_array(str->len, 5);
@@ -54,16 +53,15 @@ void throw(char* cls, char* msg) {
   exec(ctr);
   method* exinit = get_method(ex, "<init>", "(Ljava/lang/String;)V");
   frame* exctr = new_frame(exinit, ex->cp, ex->this_class);
-  elem* exself = GC_MALLOC(sizeof(elem));
-  exself->t = REF;
-  exself->data.ref = new_inst(c);
+  elem* exself = new_obj("java/lang/Exception");
   elem* exarg = GC_MALLOC(sizeof(elem));
   exarg->t = REF;
-  exarg->data.ref = self;
+  exarg->data.ref = self->data.ref;
   set(exctr->lvarray, 0, exself);
   set(exctr->lvarray, 1, exarg);
   exec(exctr);
 }
+
 elem* exec(frame* f) {
   dbg("Starting method %s.%s with signature %s", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
   attrs* code_attr = (attrs*) get(f->mt->attrs, 0);
@@ -193,7 +191,7 @@ elem* exec(frame* f) {
           err("aaload used but arrayref is not an array reference");
         array* arr = ref->data.arr;
         if (index->data.integer >= arr->size) {
-          throw("java.lang.ArrayIndexOutOfBoundsException", "Array access index is more than array len");
+          throw("java.lang.ArrayIndexOutOfBoundsException", fmt_str("Array access index %d is equal to or more than array length %d", index->data.integer, arr->size)->buf);
           break;
         }
         push(f, get(arr->data, index->data.integer));
@@ -334,72 +332,78 @@ elem* exec(frame* f) {
         continue;
       }
       case 177: goto end; // return 
-      case 178: { // getstatic
+      case 178: // getstatic 
+      case 180: { // getfield
         u2 index;
         make(index);
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != FIELD)
           err("getstatic used but constant pool ref is not valid field ref");
         mfiref_elem* fref = pe->elem.fref;
-        pool_elem* cl = get_elem(f->cp, fref->class);
-        if (cl->tag != CLASS) 
-          err("class index of field ref does not point to valid class");
-        class* c = get_class(get_utf8(f->cp, cl->elem.class)->buf);
+        //pool_elem* cl = get_elem(f->cp, fref->class);
+        dbg("%s", get_utf8(f->cp, fref->class)->buf);
+        class* c = get_class(get_utf8(f->cp, fref->class)->buf);
         pool_elem* nt = get_elem(f->cp, fref->nt);
         if (nt->tag != NTYPE) 
           err("name type index of field ref does not point to valid name type structure");
         ntype_elem* nte = nt->elem.nt;
-        field* fe = get_field(c, get_utf8(f->cp, nte->name)->buf);
+        field* fe = NULL; 
+        if (code[pc] == 178)
+          fe = get_field(c, get_utf8(f->cp, nte->name)->buf);
+        else {
+          elem* e = pop(f);
+          fe = get_inst_field(e->data.ref, get_utf8(f->cp, nte->name)->buf);
+        }
         elem* e = GC_MALLOC(sizeof(elem));
         switch (fe->desc->buf[0]) {
           case 'B': {
             e->t = INT;
-            e->data.integer = fe->stat_val.byte;
+            e->data.integer = (code[pc] == 178) ? fe->stat_val.byte : fe->dyn_val.byte;
             break;
           }
           case 'C': {
             e->t = INT;
-            e->data.integer = fe->stat_val.chr;
+            e->data.integer = (code[pc] == 178) ? fe->stat_val.chr : fe->dyn_val.chr;
             break;
           }
          case 'S': {
             e->t = INT;
-            e->data.integer = fe->stat_val.sht;
+            e->data.integer = (code[pc] == 178) ? fe->stat_val.sht : fe->dyn_val.sht;
             break;
           }
           case 'Z': {
             e->t = INT;
-            e->data.integer = fe->stat_val.bool;
+            e->data.integer = (code[pc] == 178) ? fe->stat_val.bool : fe->dyn_val.bool;
             break;
           }
           case 'I': {
             e->t = INT;
-            e->data.integer = fe->stat_val.integer;
+            e->data.integer = (code[pc] == 178) ? fe->stat_val.integer : fe->dyn_val.integer;
             break;
           }
           case 'J': {
-            e->t = LONG;
-            e->data.lng = fe->stat_val.lng;
+            e->t = LONG; 
+            e->data.lng = (code[pc] == 178) ? fe->stat_val.lng : fe->dyn_val.lng;
             break;
           }
           case 'F': {
             e->t = FLOAT;
-            e->data.flt = fe->stat_val.flt;
+            e->data.flt = (code[pc] == 178) ? fe->stat_val.flt : fe->dyn_val.flt;
             break;
           }
           case 'D': {
             e->t = DOUBLE;
-            e->data.dbl = fe->stat_val.dbl;
+            e->data.dbl = (code[pc] == 178) ? fe->stat_val.dbl : fe->dyn_val.dbl;
             break;
           }
           case 'L': {
             e->t = REF;
-            e->data.ref = fe->stat_val.refer;
+            e->data.ref = (code[pc] == 178) ? fe->stat_val.refer : fe->dyn_val.refer;
             break;
           }
           case '[': {
             e->t = ARRAY;
-            e->data.arr = fe->stat_val.refer;
+            e->data.arr = (code[pc] == 178) ? fe->stat_val.refer : fe->dyn_val.refer;
             break;
           }
         }
@@ -475,16 +479,14 @@ elem* exec(frame* f) {
         u2 index;
         make(index);
         elem* self;
-        if (code[pc] != 184)
-          self = pop(f);
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != MREF) 
           err("%s used but element at index is not a method reference", (code[pc] - 182 == 0) ? "invokevirtual" : (code[pc] - 182 == 1) ? "invokespecial" : "invokestatic");
         mfiref_elem* mref = pe->elem.mref;
         class *c = NULL;
-        if (code[pc] == 182) 
+        /*if (code[pc] == 182) 
           c = get_class(self->data.ref->class->buf);
-        else 
+        else */
           c = get_class(get_utf8(f->cp, mref->class)->buf);
         pool_elem* nt = get_elem(f->cp, mref->nt);
         if (nt->tag != NTYPE) 
@@ -494,18 +496,14 @@ elem* exec(frame* f) {
         frame* mt = new_frame(m, c->cp, c->this_class);
         elem* e = NULL;
         if (!mt) {
-          if (code[pc] != 184)
-            push(f, self);
           e = native_call(f, get_utf8(f->cp, nte->name), 0);
         }
         else {
-          if (code[pc] != 184)
-            set(mt->lvarray, 0, self);
-          if (code[pc] != 184)
-            mt->args++;
           for (u2 i = (code[pc] == 184) ? 0 : 1; i < mt->args; i++) {
             set(mt->lvarray, i, pop(f));
           }
+          if (code[pc] != 184)
+            set(mt->lvarray, 0, pop(f));
           e = exec(mt);
         }
         if (e) {
@@ -544,7 +542,7 @@ elem* exec(frame* f) {
       }
       default: err("Unrecognised or unimplemented opcode %d", code[pc]);
     }
-    // stack_trace(f);
+    stack_trace(f);
     pc++;
   }
 end:
