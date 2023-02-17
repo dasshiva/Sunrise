@@ -92,6 +92,23 @@ typedef struct {
       } *etable;
     } code;
     string* file;
+    struct {
+      u2 len;
+      struct {
+        u2 in;
+        u2 out;
+        u2 name;
+        u2 flags;
+      } *cls;
+    } inner;
+    struct {
+      u2 len;
+      struct {
+        u2 ref;
+        u2 args_len;
+        u2* args;
+      } *bs_met;
+    } bs;
   } attr;
 } attrs;
 list* init_attrs(handle* h, list* cpool, u2 len);

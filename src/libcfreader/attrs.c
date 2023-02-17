@@ -45,6 +45,35 @@ list* init_attrs(handle* h, list* cpool, u2 len) {
       skip(h, 4);
       at->attr.file = get_utf8(cpool, get_u2(h));
       dbg("Found attribute SourceFile with value %s", at->attr.file->buf);
+      add(p, at);
+    }
+    else if (equals(at->name, "InnerClasses")) {
+      skip(h, 4);
+      at->attr.inner.len = get_u2(h);
+      at->attr.inner.cls = GC_MALLOC(sizeof(at->attr.inner.cls) * at->attr.inner.len);
+      for (u2 i = 0; i < at->attr.inner.len; i++) {
+        at->attr.inner.cls[i].in = get_u2(h);
+        at->attr.inner.cls[i].out = get_u2(h);
+        at->attr.inner.cls[i].name = get_u2(h);
+        at->attr.inner.cls[i].flags = get_u2(h);
+      }
+      add(p, at);
+    }
+    else if (equals(at->name, "BootstrapMethods")) {
+      skip(h, 4);
+      at->attr.bs.len = get_u2(h);
+      at->attr.bs.bs_met = GC_MALLOC(sizeof(at->attr.bs.bs_met) * at->attr.bs.len);
+      for (u2 i = 0; i < at->attr.bs.len; i++) {
+        at->attr.bs.bs_met[i].ref = get_u2(h);
+        at->attr.bs.bs_met[i].args_len = get_u2(h);
+        if (at->attr.bs.bs_met[i].args_len == 0)
+          continue;
+        at->attr.bs.bs_met[i].args = GC_MALLOC(sizeof(u2) * at->attr.bs.bs_met[i].args_len);
+        for(u2 j = 0; j < at->attr.bs.bs_met[i].args_len; j++) {
+           at->attr.bs.bs_met[i].args[i] = get_u2(h);
+        }
+      }
+      add(p, at);
     }
     else {
       skip(h, get_u4(h));
