@@ -143,10 +143,8 @@ string* get_utf8(list* pool, u2 index) {
   pool_elem* p = get(pool, index - 1);
   switch (p->tag) {
     case UTF8: return p->elem.utf; 
-    case CLASS: {
-      u2 class = p->elem.class;
-      return get_utf8(pool, class);
-    }
+    case CLASS: return get_utf8(pool, p->elem.class);
+    case STRING: return get_utf8(pool, p->elem.string);
     default: err("Index %d is not a CONSTANT_Utf8", index - 1);
   }
 }

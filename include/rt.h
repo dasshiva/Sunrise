@@ -63,9 +63,9 @@ frame* new_frame(method* m, list* cp, string* class);
 void push(frame* f, elem* data);
 void* pop(frame* f);
 void stack_trace(frame* f);
-
 #define code(a) a->attr.code
-
 elem* native_call(frame* inv, string* name, int stat);
 void throw(char* cls, char* msg);
+string *tostring(elem* arg);
+elem* exec(frame* f);
 #endif

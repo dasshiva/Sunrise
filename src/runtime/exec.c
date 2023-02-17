@@ -24,24 +24,14 @@ static inline u1 safe_get(u1* buf, u2 index, u2 len) {
   return buf[index];
 }
 
-elem* exec(frame* f);
-elem* new_obj(char* cls) {
-   class* c = get_class(cls);
-   elem* e = GC_MALLOC(sizeof(elem));
-   e->t = REF;
-   e->data.ref = new_inst(c);
-   return e;
-}
-
-void throw(char* cls, char* msg) {
-  class* ex = get_class("java/lang/Exception");
+elem* get_string(string* str) {
+  elem* e = GC_MALLOC(sizeof(elem));
+  e->t = REF;
   class* c = get_class("java/lang/String");
-  string* str = new_str("UNCAUGHT EXCEPTION: ");
-  concat(str, cls);
-  concat(str, "\nCaused due to : ");
-  concat(str, msg);
   method* init = get_method(c, "<init>", "([C)V");
-  elem* self = new_obj("java/lang/String");
+  elem* self = GC_MALLOC(sizeof(elem));
+  self->t = REF;
+  self->data.ref = new_inst(c);
   elem* arg = GC_MALLOC(sizeof(elem));
   arg->t = ARRAY;
   arg->data.arr = new_array(str->len, 5);
@@ -53,6 +43,25 @@ void throw(char* cls, char* msg) {
   set(ctr->lvarray, 0, self);
   set(ctr->lvarray, 1, arg);
   exec(ctr);
+  e->data.ref = self->data.ref;
+  return e;
+}
+
+elem* new_obj(char* cls) {
+   class* c = get_class(cls);
+   elem* e = GC_MALLOC(sizeof(elem));
+   e->t = REF;
+   e->data.ref = new_inst(c);
+   return e;
+}
+
+void throw(char* cls, char* msg) {
+  class* ex = get_class("java/lang/Exception");
+  string* str = new_str("UNCAUGHT EXCEPTION: ");
+  concat(str, cls);
+  concat(str, "\nCaused due to : ");
+  concat(str, msg);
+  elem* self = get_string(str);
   method* exinit = get_method(ex, "<init>", "(Ljava/lang/String;)V");
   frame* exctr = new_frame(exinit, ex->cp, ex->this_class);
   elem* exself = new_obj("java/lang/Exception");
@@ -111,30 +120,7 @@ elem* exec(frame* f) {
             push(f, e);
             break;
           }
-          case STRING: {
-            elem* e = GC_MALLOC(sizeof(elem));
-            e->t = REF;
-            string* str = get_utf8(f->cp, p->elem.string);
-            class* c = get_class("java/lang/String");
-            method* init = get_method(c, "<init>", "([C)V");
-            elem* self = GC_MALLOC(sizeof(elem));
-            self->t = REF;
-            self->data.ref = new_inst(c);
-            elem* arg = GC_MALLOC(sizeof(elem));
-            arg->t = ARRAY;
-            arg->data.arr = new_array(str->len, 5);
-            for (u2 i = 0; i < str->len; i++) {
-              elem* el = get(arg->data.arr->data, i);
-              el->data.integer = at(str, i);
-            }
-            frame* ctr = new_frame(init, c->cp, new_str("java/lang/String"));
-            set(ctr->lvarray, 0, self);
-            set(ctr->lvarray, 1, arg);
-            exec(ctr);
-            e->data.ref = self->data.ref;
-            push(f, e);
-            break;
-          }
+          case STRING: push(f, get_string(get_utf8(f->cp, p->elem.string))); break;
         }
         break;
       }
@@ -524,11 +510,7 @@ elem* exec(frame* f) {
         if (pe->tag != MREF) 
           err("%s used but element at index is not a method reference", (code[pc] - 182 == 0) ? "invokevirtual" : (code[pc] - 182 == 1) ? "invokespecial" : "invokestatic");
         mfiref_elem* mref = pe->elem.mref;
-        class *c = NULL;
-        /*if (code[pc] == 182) 
-          c = get_class(self->data.ref->class->buf);
-        else */
-          c = get_class(get_utf8(f->cp, mref->class)->buf);
+        class *c = get_class(get_utf8(f->cp, mref->class)->buf);
         pool_elem* nt = get_elem(f->cp, mref->nt);
         if (nt->tag != NTYPE) 
           err("name type index of method ref does not point to valid name type structure");
@@ -558,13 +540,94 @@ elem* exec(frame* f) {
         u2 index;
         make(index);
         pc += 2;
-        pool_elem* pe = get_elem(f->cp, index);
-        if (pe->tag != INVDYN)
+        pool_elem* p = get_elem(f->cp, index);
+        if (p->tag != INVDYN)
           err("constant pool ref is not invoke dynamic info");
-        pe = get_elem(f->cp, pe->elem.inv->nt);
+        pool_elem* pe = get_elem(f->cp, p->elem.inv->nt);
         if (pe->tag != NTYPE)
-          err("%d"
-        err("invokedynamic unimplemented");
+          err("constant pool ref is not name type");
+        string* name = get_utf8(f->cp, pe->elem.nt->name);
+        if (!equals(name, "makeConcatWithConstants"))
+          err("Unsupported dynamic method %s", name->buf);
+        dbg("Starting dynamic method: %s", name->buf);
+        string* desc = get_utf8(f->cp, pe->elem.nt->desc);
+        class* c = get_class(f->class->buf);
+        attrs* bs = NULL;
+        for (int i = 0; i < c->attrs->len; i++) {
+          bs = get(c->attrs, i);
+          if (equals(bs->name, "BootstrapMethods"))
+            break;
+        }
+        if (!bs)
+          err("Attribute BootstrapMethods not found");
+        u2 len = bs->attr.bs.bs_met[p->elem.inv->bmeth].args_len;
+        u2* args = bs->attr.bs.bs_met[p->elem.inv->bmeth].args;
+        string* base = new_empty_str();
+        char* buf[20];
+        elem* arg = NULL;
+        for (u2 i = 1, j = 0; i < desc->len; i++) {
+          switch(at(desc, i)) {
+            case 'B': 
+            case 'C':
+            case 'Z':
+            case 'S': {
+              arg = pop(f);
+              snprintf(buf, sizeof(buf), "%d", arg->data.integer);
+              concat(base, buf);
+              break;
+            }
+            case 'I': {
+              if (j + 1 < len) {
+                pool_elem* pe = get_elem(f->cp, args[j]);
+                if (pe->tag == INT) {
+                  j++;
+                  snprintf(buf, sizeof(buf), "%d", pe->elem.integer);
+                }
+              }
+              else {
+                arg = pop(f);
+                snprintf(buf, sizeof(buf), "%d", arg->data.integer);
+              }
+              concat(base, buf);
+              break;
+            }
+            case 'L': {
+              if (j + 1 < len) {
+                pool_elem* pe = get_elem(f->cp, args[j]);
+                if (pe->tag == STRING) {
+                  j++;
+                  concat(base, get_utf8(f->cp, pe->elem.string)->buf);
+                }
+              }
+              else {
+                arg = pop(f);
+                string* str = tostring(arg);
+                concat(base, str->buf);
+              }
+              int end = find(desc, ';');
+              desc = substr(desc, end, desc->len - 1);
+              i = 0;
+              break;
+            }
+            case ')': i = desc->len; break;
+            default: err("Not supported");
+          }
+          index = j;
+        }
+        
+        if (index + 1 < len) {
+          pool_elem* pe = get_elem(f->cp, args[index]);
+          if (pe->tag == STRING) {
+            string* str = get_utf8(f->cp, pe->elem.string);
+            concat(base, str->buf);
+          }
+        }
+        else {
+          elem* e = pop(f);
+          concat(base, tostring(e));
+        }
+        dbg("Finished dynamic method");
+        push(f, get_string(base));
         break;
       }
       case 187: { // new
