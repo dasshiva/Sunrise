@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
     load_jar(app->syslib);
     class* sys = get_class("java/lang/System");
     field* out = get_field(sys, "out");
-    out->stat_val.refer = get_class("java/io/PrintStream");
+    out->stat_val.refer = new_inst(get_class("java/io/PrintStream"));
     class* c = get_class(app->main);
     method* m = get_method(c, "main","([Ljava/lang/String;)V");
     stack = new_list();

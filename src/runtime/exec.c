@@ -333,6 +333,13 @@ elem* exec(frame* f) {
         e->data.integer += (i4) con;
         break;
       }
+      case 146: {
+        elem* e = pop(f);
+        e->t = CHAR;
+        e->data.integer = (char) e->data.integer;
+        push(f, e);
+        break;
+      }
       case 159: // if_icmpeq
       case 160: // if_icmpne
       case 161: // if_icmplt

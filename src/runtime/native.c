@@ -9,7 +9,7 @@ extern char* except;
    err("Expected value to be of type %s", #type)
  
 static char* natives[] = {
-  "hashCode", "print", "println", "exit", "throwEx", NULL
+  "hashCode", "print", "println", "exit", "throwEx", "read", NULL
 };
 
 string *tostring(elem* arg) {
@@ -74,6 +74,14 @@ elem* native_call(frame* inv, string* name, int stat) {
             fprintf(stderr, "  at %s.%s %s\n", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
           }
           exit(1);
+          break;
+        }
+        case 5: {
+          pop(inv);
+          elem* e = GC_MALLOC(sizeof(elem));
+          e->t = INT;
+          e->data.integer = getchar();
+          push(inv, e);
           break;
         }
       }
