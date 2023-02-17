@@ -78,6 +78,20 @@ int equals(const string* lhs, const char* rhs) {
   return 0;
 }
 
+void cat_start(string* dest, const char* str) {
+  int len = strlen(str);
+  char* buf = GC_MALLOC(sizeof(char) * dest->len);
+  strcpy(buf, dest->buf);
+  dest->cap = dest->len + len + 20;
+  dest->buf = GC_REALLOC(dest->buf, dest->cap);
+  strcpy(dest->buf, str);
+  for (u2 i = len, j = 0; j < dest->len; i++, j++) {
+    dest->buf[i] = buf[j];
+  }
+  dest->len += len;
+  dest->buf[dest->len] = '\0';
+}
+
 void concat(string* dest, const char* src) {
   int len = strlen(src);
   if (dest->cap + 1 < dest->len + len) {
@@ -138,4 +152,11 @@ int ends_with(const string* s, const char* str) {
     }
   }
   return 1;
+}
+
+void replace(string* str, char c, char new) {
+  for (u2 i = 0; i < str->len; i++) {
+    if(str->buf[i] == c)
+      str->buf[i] = new;
+  }
 }

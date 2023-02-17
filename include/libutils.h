@@ -21,6 +21,8 @@ string* substr(string* s, const u4 start, const u4 end);
 int find(string* s, char c);
 int starts_with(const string* s, const char* str);
 int ends_with(const string* s, const char* str);
+void cat_start(string* dest, const char* str);
+void replace(string* str, char c, char new);
 string* fmt_str(char* fmt, ...);
 
 typedef struct __list {

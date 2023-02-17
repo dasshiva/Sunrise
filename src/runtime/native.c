@@ -13,6 +13,8 @@ static char* natives[] = {
 };
 
 string *tostring(elem* arg) {
+  if (arg->t != REF)
+    err("tostring() called but arg is not a reference but %d", arg->t);
   inst* c = arg->data.ref;
   field* f = get_inst_field(c, "buffer");
   array* arr = f->dyn_val.refer;
@@ -71,6 +73,7 @@ elem* native_call(frame* inv, string* name, int stat) {
           fprintf(stderr, "%s\n\nStack trace:\n", tostring(pop(inv))->buf);
           for (int i = stack->len - 1; i >= 0; i--) {
             frame* f = get(stack, i);
+            replace(f->class, '/', '.');
             fprintf(stderr, "  at %s.%s %s\n", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
           }
           exit(1);

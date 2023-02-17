@@ -11,8 +11,8 @@
 static list* classes = NULL;
 static int is_loaded(string* name);
 char* syslib[2][SYSLIB_SZ] = {
-  { "java/lang/Object", "java/lang/String", "java/lang/System", "java/io/PrintStream", "java/lang/Exception", "java/lang/RuntimeException", "java/lang/ArrayIndexOutOfBoundsException", "java/lang/StringIndexOutOfBoundsException", "java/io/InputStream", NULL}, 
-  { "syslib/VMObjExt", "syslib/VMStr", "syslib/VMSys", "syslib/VMPrtStream", "syslib/VMEx", "syslib/VMRtEx", "syslib/VMArrIndEx", "syslib/VMStrIndEx", "syslib/VMIStream", NULL }
+  { "java/lang/Object", "java/lang/String", "java/lang/System", "java/io/PrintStream", "java/lang/Exception", "java/lang/RuntimeException", "java/lang/ArrayIndexOutOfBoundsException", "java/lang/StringIndexOutOfBoundsException", "java/io/InputStream", "java/lang/Math", NULL}, 
+  { "syslib/VMObjExt", "syslib/VMStr", "syslib/VMSys", "syslib/VMPrtStream", "syslib/VMEx", "syslib/VMRtEx", "syslib/VMArrIndEx", "syslib/VMStrIndEx", "syslib/VMIStream", "syslib/VMMath", NULL }
 };
 
 class* get_class(char* file) {

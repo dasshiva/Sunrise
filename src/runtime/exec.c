@@ -158,6 +158,18 @@ elem* exec(frame* f) {
         push(f, e);
         break;
       }
+      // dload_<n>
+      case 38:
+      case 39:
+      case 40:
+      case 41: {
+        u1 delta = code[pc] - 38;
+        elem* e = get(f->lvarray, delta);
+        if (e->t != DOUBLE) 
+          err("dload_<%d> used but element at index %d is not a double", delta, delta);
+        push(f, e);
+        break;
+      }
       // aload_<n>
       case 42:
       case 43:
@@ -259,9 +271,10 @@ elem* exec(frame* f) {
       case 74: {
         u1 delta = code[pc] - 71;
         elem* e = pop(f);
-        if (e->t != FLOAT) 
+        if (e->t != DOUBLE) 
           err("dstore_<%d> used but stack top is not double", delta);
         set(f->lvarray, delta, e);
+        set(f->lvarray, delta + 1, e);
         break;
       }
       // astore_<n>
@@ -310,13 +323,64 @@ elem* exec(frame* f) {
         push(f, new);
         break;
       }
-      case 132: {
+      case 132: { // iinc
         u1 index = safe_get(code, ++pc, len);
         u1 con = safe_get(code, ++pc, len);
         elem* e = get(f->lvarray, index);
         if (e->t != INT)
           err("iinc used but element at index is not int");
         e->data.integer += (i4) con;
+        break;
+      }
+      case 151: // dcmpl
+      case 152: {  // dcmpg 
+        elem* val2 = pop(f);
+        elem* val1 = pop(f);
+        if (val1->t != DOUBLE || val2->t != DOUBLE)
+          err("dcmp used byt arguments are not doubles");
+        elem* res = GC_MALLOC(sizeof(elem));
+        res->t = INT;
+        if (isnan(val1->data.dbl) || isnan(val2->data.dbl)) {
+          if (code[pc] == 152)
+            res->data.integer = 1;
+          else
+            res->data.integer = -1;
+          push(f, res);
+        }
+        if (val1->data.dbl > val2->data.dbl)
+          res->data.integer = 1;
+        else if (val1->data.dbl == val2->data.dbl)
+          res->data.integer = 0;
+        else 
+          res->data.integer = -1;
+        push(f, res);
+        break;
+      }
+      case 153: // ifeq
+      case 154: // ifne
+      case 155: // iflt
+      case 156: // ifge
+      case 157: // ifgt
+      case 158: { // ifle
+        u2 delta = code[pc] - 153;
+        elem* e = pop(f);
+        u1 res = 0;
+        switch (delta) {
+          case 0: res = e->data.integer == 0; break;
+          case 1: res = e->data.integer != 0; break;
+          case 2: res = e->data.integer < 0; break;
+          case 3: res = e->data.integer <= 0; break;
+          case 4: res = e->data.integer > 0; break;
+          case 5: res = e->data.integer >= 0; break;
+        }
+        if (res) {
+          i2 offset;
+          make(offset);
+          instr += offset;
+          pc = instr;
+          continue;
+        }
+        pc += 2;
         break;
       }
       case 159: // if_icmpeq
@@ -327,7 +391,7 @@ elem* exec(frame* f) {
       case 164: { // if_icmple
         elem* val2 = pop(f);
         elem* val1 = pop(f);
-        if (val1->t != INT || val2->t != INT)
+        if (as_needed(val1->t) != INT || as_needed(val2->t) != INT)
           err("if_icmpgt used but arguments are not ints");
         u1 res = 0;
         switch (code[pc] - 159) {
@@ -359,6 +423,10 @@ elem* exec(frame* f) {
         continue;
       }
       case 172: // ireturn
+      case 173: // lreturn
+      case 174: // freturn
+      case 175: // dreturn
+      case 176: // areturn
       case 177: goto end; // return
       case 178: // getstatic 
       case 180: { // getfield
@@ -522,12 +590,19 @@ elem* exec(frame* f) {
           e = native_call(f, get_utf8(f->cp, nte->name), 0);
         }
         else {
-          if (code[pc] != 184)
+          if (code[instr] != 184)
             mt->args++; 
-          for (u2 i = (code[pc] == 184) ? 0 : 1; i < mt->args; i++) {
-            set(mt->lvarray, i, pop(f));
+          for (u2 i = (code[instr] == 184) ? 0 : 1; i < mt->args; i++) {
+            elem* e = pop(f);
+            if (e->t == DOUBLE || e->t == LONG) {
+              set(mt->lvarray, i, e);
+              set(mt->lvarray, i + 1, e);
+              i++;
+            }
+            else 
+              set(mt->lvarray, i, e);
           }
-          if (code[pc] != 184)
+          if (code[instr] != 184)
             set(mt->lvarray, 0, pop(f));
           e = exec(mt);
         }
@@ -565,67 +640,78 @@ elem* exec(frame* f) {
         string* base = new_empty_str();
         char* buf[20];
         elem* arg = NULL;
-        for (u2 i = 1, j = 0; i < desc->len; i++) {
+        for (i4 i = find(desc, ')') - 1, j = 0; i >= 0; i--) {
           switch(at(desc, i)) {
-            case 'B': 
-            case 'C':
+            case 'B':
             case 'Z':
             case 'S': {
               arg = pop(f);
               snprintf(buf, sizeof(buf), "%d", arg->data.integer);
-              concat(base, buf);
+              cat_start(base, buf);
+              break;
+            }
+            case 'C': {
+              arg = pop(f);
+              snprintf(buf, sizeof(buf), "%c", arg->data.integer);
+              cat_start(base, buf);
               break;
             }
             case 'I': {
-              if (j + 1 < len) {
-                pool_elem* pe = get_elem(f->cp, args[j]);
-                if (pe->tag == INT) {
-                  j++;
-                  snprintf(buf, sizeof(buf), "%d", pe->elem.integer);
-                }
-              }
-              else {
-                arg = pop(f);
+              arg = pop(f);
+              if (arg->t == INT) {
                 snprintf(buf, sizeof(buf), "%d", arg->data.integer);
               }
-              concat(base, buf);
-              break;
-            }
-            case 'L': {
-              if (j + 1 < len) {
-                pool_elem* pe = get_elem(f->cp, args[j]);
-                if (pe->tag == STRING) {
-                  j++;
-                  concat(base, get_utf8(f->cp, pe->elem.string)->buf);
+              else {
+                push(f, arg);
+                if (j < len) {
+                  pool_elem* pe = get_elem(f->cp, args[j]);
+                  if (pe->tag == INT) {
+                    j++;
+                    snprintf(buf, sizeof(buf), "%d", pe->elem.integer);
+                  }
                 }
               }
-              else {
-                arg = pop(f);
-                string* str = tostring(arg);
-                concat(base, str->buf);
-              }
-              int end = find(desc, ';');
-              desc = substr(desc, end, desc->len - 1);
-              i = 0;
+              cat_start(base, buf);
               break;
             }
-            case ')': i = desc->len; break;
-            default: err("Not supported");
+            case ';': {
+              arg = pop(f);
+              if (arg->t == STRING) {
+                string* str = tostring(arg);
+                cat_start(base, str->buf);
+              }
+              else {
+                push(f, arg);
+                if (j < len) {
+                  pool_elem* pe = get_elem(f->cp, args[j]);
+                  if (pe->tag == STRING) {
+                    j++;
+                    cat_start(base, get_utf8(f->cp, pe->elem.string)->buf);
+                  }
+                }
+              }
+              int end = find(desc, 'L');
+              desc = substr(desc, 0, end);
+              i = end;
+              break;
+            }
+            case '(': i = -1 ; break;
+            default: err("Not supported %c", at(desc, i));
           }
           index = j;
         }
-        
-        if (index + 1 < len) {
+        if (index < len) {
           pool_elem* pe = get_elem(f->cp, args[index]);
           if (pe->tag == STRING) {
             string* str = get_utf8(f->cp, pe->elem.string);
-            concat(base, str->buf);
+            cat_start(base, str->buf);
           }
         }
         else {
           elem* e = pop(f);
-          concat(base, tostring(e));
+          cat_start(base, tostring(e)->buf);
         }
+        dbg("%s", base->buf);
         dbg("Finished dynamic method");
         push(f, get_string(base));
         break;
@@ -637,15 +723,10 @@ elem* exec(frame* f) {
        if (pe->tag != CLASS) 
          err("new used but index does not point to valid constant pool class ref");
        class* super = get_class(get_utf8(f->cp, pe->elem.class)->buf);
-      while(1) {
+       while(1) {
          if (equals(super->super_class, "java/lang/Exception")) {
            string* name = new_str(get_utf8(f->cp, pe->elem.class)->buf);
-           while(1) {
-             int index = find(name, '/');
-             if (index == -1)
-               break;
-             name->buf[index] = '.';
-           }
+           replace(name, '/','.');
            except = name->buf;
            break;
          }

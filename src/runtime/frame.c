@@ -67,11 +67,13 @@ static void parse_desc(frame* f) {
         }
         case 'J': {
           elem* e = get(f->lvarray, arg++);
+          arg++;
           e->t = LONG;
           break;
         }
         case 'D': {
           elem* e = get(f->lvarray, arg++);
+          arg++;
           e->t = DOUBLE;
           break;
         }
