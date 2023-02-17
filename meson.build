@@ -1,5 +1,5 @@
 project('sunrise', ['c'],
-  version : '0.1',
+  version : '1.0',
   default_options : ['warning_level=3'])
 src = ['src/main.c', 'src/runtime/loader.c', 'src/runtime/frame.c', 'src/runtime/exec.c', 'src/runtime/ref.c', 'src/runtime/native.c']
 thirdparty = ['third-party/zip.c']
