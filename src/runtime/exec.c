@@ -333,13 +333,6 @@ elem* exec(frame* f) {
         e->data.integer += (i4) con;
         break;
       }
-      case 146: {
-        elem* e = pop(f);
-        e->t = CHAR;
-        e->data.integer = (char) e->data.integer;
-        push(f, e);
-        break;
-      }
       case 159: // if_icmpeq
       case 160: // if_icmpne
       case 161: // if_icmplt
@@ -559,6 +552,19 @@ elem* exec(frame* f) {
         if (e) {
           push(f, e);
         } 
+        break;
+      }
+      case 186: { // invokedynamic
+        u2 index;
+        make(index);
+        pc += 2;
+        pool_elem* pe = get_elem(f->cp, index);
+        if (pe->tag != INVDYN)
+          err("constant pool ref is not invoke dynamic info");
+        pe = get_elem(f->cp, pe->elem.inv->nt);
+        if (pe->tag != NTYPE)
+          err("%d"
+        err("invokedynamic unimplemented");
         break;
       }
       case 187: { // new
