@@ -1,4 +1,4 @@
-Sunrise - A Java Virtual Machine(JVM) implementation in C
+Sunrise - A Java Virtual Machine(JVM) implementation in C99
 
 Sunrise is a barebones implementation written mainly with the intention of 
 learning more about how Java and the JVM works under the hood. It is single 
@@ -13,6 +13,12 @@ how VMs work in general.
 Sunrise was developed and tested on Linux and is guaranteed to work on Linux.
 I am not aware if it works on Windows as I do not have a Windows machine at hand
 currently.
+
+Requirements:
+1. A C compiler supporting at least the C99 standard (like clang or gcc)
+2. The Meson build system (on Linux only)
+3. GNU Parallel (on Linux only)
+In addition, Sunrise depends on libgc[https://github.com/ivmai/bdwgc] and will not work without it.
 
 Sunrise is licensed under the MIT License a copy of which you can find in the
 LICENSE file. 

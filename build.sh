@@ -6,9 +6,7 @@ meson compile -C build
 if [[ "$0" == "full-build.sh" ]]; then
 	$jdk/javac syslib/Make.java                                  
 	$jdk/java syslib/Make syslib/VMObj.class
-	for i in syslib/*.java; do
-        javac $i                                           
-        done
+	parallel -j 4 javac {} < classlist
 	rm syslib/Make.class
 	jar cf syslib.jar syslib/*.class
 fi
