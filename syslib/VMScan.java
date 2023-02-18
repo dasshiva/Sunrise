@@ -15,9 +15,10 @@ public class VMScan extends VMObj {
     buffer = new String();
   }
   
-  public String nextLine() {
+  private String getLine() {
     try {
-      buffer = new String();
+      if (buffer == null)
+        buffer = new String();
       while (true) {
         char c = (char) src.read();
         if (c == '\n' || c == '\r')
@@ -33,6 +34,12 @@ public class VMScan extends VMObj {
     }
   }
   
+  public String nextLine() {
+    String str = getLine();
+    buffer = new String();
+    return str;
+  }
+  
   public int nextInt() {
     String token = new String();
     for (;;) {
@@ -44,8 +51,8 @@ public class VMScan extends VMObj {
         token += c;
       }
       else 
-        nextLine();
+        getLine();
     }
-    return 0;
+    return Integer.parseInt(token);
   }
 }

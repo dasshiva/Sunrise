@@ -4,7 +4,7 @@ public class Hello {
 	public static void main(String[] args) throws Exception {
 		Scanner s = new Scanner(System.in);
 		System.out.print("Enter a line: ");
-		String i = s.nextLine();
+		int i = s.nextInt();
 		System.out.println("You entered: " + i);
 	}
 }

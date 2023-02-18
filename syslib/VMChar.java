@@ -31,13 +31,13 @@ public class VMChar extends VMObj {
   
   public static char toLowerCase(char ch) {
     if (isLowerCase(ch))
-      return ch - 32;
+      return (char) (ch - 32);
     return ch;
   }
   
   public static char toUpperCase(char ch) {
     if (isUpperCase(ch))
-      return ch + 32;
+      return (char) (ch + 32);
     return ch;
   }
   

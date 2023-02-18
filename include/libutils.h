@@ -37,7 +37,7 @@ void add(list* l, void* data);
 void* get(list* l, u4 index);
 void set(list* l, u4 index, void* data);
 void delete(list* l, u4 index);
-void* move(list* l, u4 index);
+void insert(list* l, u4 index, void* data);
 
 #define if_null(val, action) \
   if (val == NULL) \

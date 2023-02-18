@@ -83,6 +83,7 @@ elem* exec(frame* f) {
   for (i8 pc = 0, instr = 0; pc < len; ) {
     instr = pc;
     switch (safe_get(code, pc, len)) {
+      case 0: break; // nop
       // iconst_<n>
       case 2:
       case 3:
@@ -285,6 +286,7 @@ elem* exec(frame* f) {
       case 77:
       case 78: {
         u1 delta = code[pc] - 75;
+        stack_trace(f);
         elem* e = pop(f);
         if (e->t != REF && e->t != ARRAY) 
           err("astore_<%d> used but stack top is not reference", delta);
@@ -309,20 +311,32 @@ elem* exec(frame* f) {
         set(arr->data, index->data.integer, val);
         break;
       }
-      // dup
-      case 89: {
-        elem* e = get(f->stack, f->stack->len - 1);
-        elem* new = GC_MALLOC(sizeof(elem));
-        new->t = e->t;
-        switch (e->t) {
-          case INT: new->data.integer = e->data.integer; break;
-          case FLOAT: new->data.flt = e->data.flt; break;
-          case LONG: new->data.lng = e->data.lng; break;
-          case DOUBLE: new->data.dbl = e->data.dbl; break;
-          case REF: new->data.ref = e->data.ref; break;
-          case ARRAY: new->data.arr = e->data.arr; break;
-        }
-        push(f, new);
+      case 87 : pop(f); break; // pop
+      case 88 : pop(f); pop(f); break; // pop2
+      case 89: { // dup
+        elem* e = pop(f);
+        push(f, e);
+        push(f, e);
+        break;
+      }
+      case 90 : { // dup_x1
+        stack_trace(f);
+        elem* top = pop(f);
+        elem* down = pop(f);
+        push(f, top);
+        push(f, down);
+        push(f, top);
+        break;
+      }
+      case 96: { // iadd
+        elem* val1 = pop(f);
+        elem* val2 = pop(f);
+        if (val1->t != INT || val2->t != INT)
+          err("iadd used but arguments are not ints");
+        elem* res = GC_MALLOC(sizeof(elem));
+        res->t = INT;
+        res->t = val1->data.integer + val2->data.integer;
+        push(f, res);
         break;
       }
       case 132: { // iinc
@@ -684,7 +698,7 @@ elem* exec(frame* f) {
         string* base = new_empty_str();
         char* buf[20];
         elem* arg = NULL;
-        for (i4 i = find(desc, ')') - 1, j = 0; i >= 0; i--) {
+        for (i4 i = find(desc, ')') - 1, j = 0; i > 0; i--) {
           switch(at(desc, i)) {
             case 'B':
             case 'Z':
@@ -720,7 +734,7 @@ elem* exec(frame* f) {
             }
             case ';': {
               arg = pop(f);
-              if (arg->t == REF) {
+              if (arg->t == REF && equals(arg->data.ref->class, "java/lang/String")) {
                 string* str = tostring(arg);
                 cat_start(base, str->buf);
               }
@@ -736,7 +750,7 @@ elem* exec(frame* f) {
               }
               int end = find(desc, 'L');
               desc = substr(desc, 0, end);
-              i = end;
+              i = end - 1;
               break;
             }
             case '(': i = -1 ; break;
@@ -744,8 +758,8 @@ elem* exec(frame* f) {
           }
           index = j;
         }
-        elem* e = pop(f);
-        if (e->t == REF && equals(e->data.ref->class, "java/lang/String")) 
+        elem* e = (f->stack->len != 0) ? pop(f) : NULL;
+        if (e != NULL && (e->t == REF && equals(e->data.ref->class, "java/lang/String"))) 
           cat_start(base, tostring(e)->buf);
         else {
           push(f, e);
@@ -824,7 +838,7 @@ elem* exec(frame* f) {
       }
       default: err("Unrecognised or unimplemented opcode %d", code[pc]);
     }
-    //stack_trace(f);
+    stack_trace(f);
     pc++;
   }
 end:
