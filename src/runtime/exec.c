@@ -1,4 +1,6 @@
 #include <include/rt.h>
+#include <math.h>
+#include <stdio.h>
 
 extern list* stack;
 #define make(res) \
@@ -346,9 +348,9 @@ elem* exec(frame* f) {
         elem* e = pop(f);
         if (e->t != INT)
           err("i2f used but stack top is not int");
-        float f = (float) e->data.integer;
+        float flt = (float) e->data.integer;
         e->t = FLOAT;
-        e->data.flt = f;
+        e->data.flt = flt;
         push(f, e);
         break;
       }
@@ -718,7 +720,7 @@ elem* exec(frame* f) {
             }
             case ';': {
               arg = pop(f);
-              if (arg->t == STRING) {
+              if (arg->t == REF) {
                 string* str = tostring(arg);
                 cat_start(base, str->buf);
               }
@@ -742,16 +744,16 @@ elem* exec(frame* f) {
           }
           index = j;
         }
-        if (index < len) {
-          pool_elem* pe = get_elem(f->cp, args[index]);
+        elem* e = pop(f);
+        if (e->t == REF && equals(e->data.ref->class, "java/lang/String")) 
+          cat_start(base, tostring(e)->buf);
+        else {
+          push(f, e);
+          pool_elem* pe = get_elem(f->cp, args[index] + 1);
           if (pe->tag == STRING) {
             string* str = get_utf8(f->cp, pe->elem.string);
             cat_start(base, str->buf);
           }
-        }
-        else {
-          elem* e = pop(f);
-          cat_start(base, tostring(e)->buf);
         }
         dbg("Finished dynamic method");
         push(f, get_string(base));
