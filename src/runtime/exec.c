@@ -332,7 +332,49 @@ elem* exec(frame* f) {
         e->data.integer += (i4) con;
         break;
       }
-      case 146: break; // i2c
+      case 133: { // i2l
+        elem* e = pop(f);
+        if (e->t != INT)
+          err("i2l used but stack top is not int");
+        long l = e->data.integer;
+        e->t = LONG;
+        e->data.lng = l;
+        push(f, e);
+        break;
+      }
+      case 134: { // i2f
+        elem* e = pop(f);
+        if (e->t != INT)
+          err("i2f used but stack top is not int");
+        float f = (float) e->data.integer;
+        e->t = FLOAT;
+        e->data.flt = f;
+        push(f, e);
+        break;
+      }
+      case 135: { // i2d 
+        elem* e = pop(f);
+        if (e->t != INT)
+          err("i2d used but stack top is not int");
+        double d = (double) e->data.integer;
+        e->t = DOUBLE;
+        e->data.dbl = d;
+        push(f, e);
+        break;
+      }
+      case 136: { // l2i
+        elem* e = pop(f);
+        if (e->t != LONG)
+          err("l2i used but stack top is not long");
+        int i = (int) e->data.lng;
+        e->t = INT;
+        e->data.integer = i;
+        push(f, e);
+        break;
+      }
+      case 145: // i2b
+      case 146: // i2c
+      case 147: break; // i2s
       case 151: // dcmpl
       case 152: {  // dcmpg 
         elem* val2 = pop(f);
