@@ -332,6 +332,7 @@ elem* exec(frame* f) {
         e->data.integer += (i4) con;
         break;
       }
+      case 146: break; // i2c
       case 151: // dcmpl
       case 152: {  // dcmpg 
         elem* val2 = pop(f);
@@ -453,52 +454,52 @@ elem* exec(frame* f) {
         switch (fe->desc->buf[0]) {
           case 'B': {
             e->t = INT;
-            e->data.integer = (code[pc] == 178) ? fe->stat_val.byte : fe->dyn_val.byte;
+            e->data.integer = (code[instr] == 178) ? fe->stat_val.byte : fe->dyn_val.byte;
             break;
           }
           case 'C': {
             e->t = INT;
-            e->data.integer = (code[pc] == 178) ? fe->stat_val.chr : fe->dyn_val.chr;
+            e->data.integer = (code[instr] == 178) ? fe->stat_val.chr : fe->dyn_val.chr;
             break;
           }
          case 'S': {
             e->t = INT;
-            e->data.integer = (code[pc] == 178) ? fe->stat_val.sht : fe->dyn_val.sht;
+            e->data.integer = (code[instr] == 178) ? fe->stat_val.sht : fe->dyn_val.sht;
             break;
           }
           case 'Z': {
             e->t = INT;
-            e->data.integer = (code[pc] == 178) ? fe->stat_val.bool : fe->dyn_val.bool;
+            e->data.integer = (code[instr] == 178) ? fe->stat_val.bool : fe->dyn_val.bool;
             break;
           }
           case 'I': {
             e->t = INT;
-            e->data.integer = (code[pc] == 178) ? fe->stat_val.integer : fe->dyn_val.integer;
+            e->data.integer = (code[instr] == 178) ? fe->stat_val.integer : fe->dyn_val.integer;
             break;
           }
           case 'J': {
             e->t = LONG; 
-            e->data.lng = (code[pc] == 178) ? fe->stat_val.lng : fe->dyn_val.lng;
+            e->data.lng = (code[instr] == 178) ? fe->stat_val.lng : fe->dyn_val.lng;
             break;
           }
           case 'F': {
             e->t = FLOAT;
-            e->data.flt = (code[pc] == 178) ? fe->stat_val.flt : fe->dyn_val.flt;
+            e->data.flt = (code[instr] == 178) ? fe->stat_val.flt : fe->dyn_val.flt;
             break;
           }
           case 'D': {
             e->t = DOUBLE;
-            e->data.dbl = (code[pc] == 178) ? fe->stat_val.dbl : fe->dyn_val.dbl;
+            e->data.dbl = (code[instr] == 178) ? fe->stat_val.dbl : fe->dyn_val.dbl;
             break;
           }
           case 'L': {
             e->t = REF;
-            e->data.ref = (code[pc] == 178) ? fe->stat_val.refer : fe->dyn_val.refer;
+            e->data.ref = (code[instr] == 178) ? fe->stat_val.refer : fe->dyn_val.refer;
             break;
           }
           case '[': {
             e->t = ARRAY;
-            e->data.arr = (code[pc] == 178) ? fe->stat_val.refer : fe->dyn_val.refer;
+            e->data.arr = (code[instr] == 178) ? fe->stat_val.refer : fe->dyn_val.refer;
             break;
           }
         }
@@ -575,7 +576,7 @@ elem* exec(frame* f) {
         elem* self;
         pool_elem* pe = get_elem(f->cp, index);
         if (pe->tag != MREF) 
-          err("%s used but element at index is not a method reference", (code[pc] - 182 == 0) ? "invokevirtual" : (code[pc] - 182 == 1) ? "invokespecial" : "invokestatic");
+          err("%s used but element at index is not a method reference", (code[instr] - 182 == 0) ? "invokevirtual" : (code[pc] - 182 == 1) ? "invokespecial" : "invokestatic");
         mfiref_elem* mref = pe->elem.mref;
         class *c = get_class(get_utf8(f->cp, mref->class)->buf);
         pool_elem* nt = get_elem(f->cp, mref->nt);
@@ -710,7 +711,6 @@ elem* exec(frame* f) {
           elem* e = pop(f);
           cat_start(base, tostring(e)->buf);
         }
-        dbg("%s", base->buf);
         dbg("Finished dynamic method");
         push(f, get_string(base));
         break;
@@ -756,6 +756,26 @@ elem* exec(frame* f) {
         ret->t = INT;
         ret->data.integer = e->data.arr->size;
         push(f, ret);
+        break;
+      }
+      case 198: // ifnull
+      case 199: { // ifnonnull
+        elem* e = pop(f);
+        if (e->t != REF && e->t != ARRAY)
+          err("%s used but argument is not reference", (code[instr] == 198) ? "ifnull" : "ifnonnull");
+        u1 res = 0;
+        if (code[instr] == 198) 
+          res = (e->t == REF) ? e->data.ref == NULL : e->data.arr == NULL;
+        else
+          res = (e->t == REF) ? e->data.ref != NULL : e->data.arr != NULL;
+        if (res) {
+          i2 off;
+          make(off);
+          instr += off;
+          pc = instr;
+          continue;
+        }
+        pc += 2;
         break;
       }
       default: err("Unrecognised or unimplemented opcode %d", code[pc]);

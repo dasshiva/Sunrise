@@ -13,3 +13,4 @@ syslib/VMStrIndEx.java
 syslib/VMIStream.java
 syslib/VMRtEx.java
 syslib/VMSys.java
+syslib/VMNullPtrEx.java
