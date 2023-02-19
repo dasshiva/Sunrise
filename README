@@ -20,6 +20,11 @@ Requirements:
 3. GNU Parallel (on Linux only)
 In addition, Sunrise depends on libgc[https://github.com/ivmai/bdwgc] and will not work without it.
 
+Limitations:
+1. Sunrise does not support Modified UTF8. This means multibyte characters i.e 
+chracters in other languagues are not supported. 
+2. Bootstrap methods are not supported (with the exception of makeConcatWithConstants)
+
 Sunrise is licensed under the MIT License a copy of which you can find in the
 LICENSE file. 
 

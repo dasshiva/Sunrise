@@ -15,44 +15,41 @@ public class VMScan extends VMObj {
     buffer = new String();
   }
   
-  private String getLine() {
+  private void getLine() {
     try {
-      if (buffer == null)
-        buffer = new String();
+      index = 0;
+      buffer = new String();
       while (true) {
         char c = (char) src.read();
         if (c == '\n' || c == '\r')
           break;
         buffer += c;
       }
-      index = 0;
-      String ret = new String(buffer);
-      buffer += ' ';
-      return ret;
     } catch (IOException e) {
       throw new RuntimeException("IOException happened while reading");
     }
   }
   
   public String nextLine() {
-    String str = getLine();
-    buffer = new String();
-    return str;
+    getLine();
+    index = buffer.length();
+    return new String(buffer);
+  }
+  
+  public String next() {
+    String token = new String();
+    if (index == buffer.length())
+      getLine();
+    for (; index < buffer.length(); index++) {
+      char c = buffer.charAt(index);
+      if (c == ' ') 
+        break;
+      token += c;
+    }
+    return token;
   }
   
   public int nextInt() {
-    String token = new String();
-    for (;;) {
-      if (index < buffer.length()) {
-        char c = buffer.charAt(index);
-        if (buffer.charAt(index++) == ' ' && token.length() != 0) 
-          break;
-        index++;
-        token += c;
-      }
-      else 
-        getLine();
-    }
-    return Integer.parseInt(token);
+    return Integer.parseInt(next());
   }
 }

@@ -82,8 +82,15 @@ elem* exec(frame* f) {
   u4 len = code(code_attr).code_len;
   for (i8 pc = 0, instr = 0; pc < len; ) {
     instr = pc;
+    //dbg("%d", safe_get(code, pc, len));
     switch (safe_get(code, pc, len)) {
       case 0: break; // nop
+      case 1: { // aconst_null
+        elem* e = GC_MALLOC(sizeof(elem));
+        e->t = REF;
+        e->data.ref = NULL;
+        push(f, e);
+      }
       // iconst_<n>
       case 2:
       case 3:
@@ -149,6 +156,14 @@ elem* exec(frame* f) {
         }
         break;
       }
+      case 21: { // iload
+        u2 index = safe_get(code, ++pc, len);
+        elem* e = get(f->lvarray, index);
+        if (as_needed(e->t) != INT)
+         err("iload used but index of local variable array is not int");
+        push(f, e);
+        break;
+      }
       // iload_<n>
       case 26: 
       case 27:
@@ -156,7 +171,7 @@ elem* exec(frame* f) {
       case 29: {
         u1 delta = code[pc] - 26;
         elem* e = get(f->lvarray, delta);
-        if (e->t != INT && e->t != BOOL && e->t != CHAR && e->t != SHORT)
+        if (as_needed(e->t) != INT)
           err("iload_<%d> used but index at local variable array is not int", delta);
         push(f, e);
         break;
@@ -220,6 +235,14 @@ elem* exec(frame* f) {
         push(f, get(arr->data, index->data.integer));
         break;
       }
+      case 54: { // istore
+        elem* e = pop(f);
+        if (as_needed(e->t) != INT)
+          err("istore used but argument is not int");
+        u1 index = safe_get(code, ++pc, len);
+        set(f->lvarray, index, e);
+        break;
+      }
       // dstore
       case 57: {
         u1 delta = safe_get(code, ++pc, len);
@@ -237,7 +260,7 @@ elem* exec(frame* f) {
       case 62: {
         u1 delta = code[pc] - 59;
         elem* e = pop(f);
-        if (e->t != INT && e->t != BOOL && e->t != CHAR && e->t != SHORT) 
+        if (as_needed(e->t) != INT) 
           err("istore_<%d> used but stack top is not int", delta);
         set(f->lvarray, delta, e);
         break;
@@ -286,7 +309,6 @@ elem* exec(frame* f) {
       case 77:
       case 78: {
         u1 delta = code[pc] - 75;
-        stack_trace(f);
         elem* e = pop(f);
         if (e->t != REF && e->t != ARRAY) 
           err("astore_<%d> used but stack top is not reference", delta);
@@ -311,32 +333,56 @@ elem* exec(frame* f) {
         set(arr->data, index->data.integer, val);
         break;
       }
-      case 87 : pop(f); break; // pop
-      case 88 : pop(f); pop(f); break; // pop2
-      case 89: { // dup
-        elem* e = pop(f);
-        push(f, e);
-        push(f, e);
+      case 87: pop(f); break; // pop
+      // dup
+      case 89: {
+        elem* e = get(f->stack, f->stack->len - 1);
+        elem* new = GC_MALLOC(sizeof(elem));
+        new->t = e->t;
+        switch (e->t) {
+          case INT: new->data.integer = e->data.integer; break;
+          case FLOAT: new->data.flt = e->data.flt; break;
+          case LONG: new->data.lng = e->data.lng; break;
+          case DOUBLE: new->data.dbl = e->data.dbl; break;
+          case REF: new->data.ref = e->data.ref; break;
+          case ARRAY: new->data.arr = e->data.arr; break;
+        }
+        push(f, new);
         break;
       }
-      case 90 : { // dup_x1
-        stack_trace(f);
+      case 90: { // dup_x1
         elem* top = pop(f);
-        elem* down = pop(f);
+        elem* val = pop(f);
         push(f, top);
-        push(f, down);
+        push(f, val);
         push(f, top);
-        break;
+        break; 
       }
       case 96: { // iadd
         elem* val1 = pop(f);
         elem* val2 = pop(f);
-        if (val1->t != INT || val2->t != INT)
+        if (as_needed(val1->t) != INT && as_needed(val2->t) != INT)
           err("iadd used but arguments are not ints");
-        elem* res = GC_MALLOC(sizeof(elem));
-        res->t = INT;
-        res->t = val1->data.integer + val2->data.integer;
-        push(f, res);
+        val1->data.integer += val2->data.integer;
+        push(f, val1);
+        break;
+      }
+      case 100: { // isub
+        elem* val2 = pop(f);
+        elem* val1 = pop(f);
+        if (as_needed(val1->t) != INT && as_needed(val2->t) != INT)
+          err("isub used but arguments are not ints");
+        val1->data.integer -= val2->data.integer;
+        push(f, val1);
+        break;
+      }
+      case 104 : { // imul
+        elem* val1 = pop(f);
+        elem* val2 = pop(f);
+        if (as_needed(val1->t) != INT && as_needed(val2->t) != INT)
+          err("imul used but arguments are not ints");
+        val1->data.integer *= val2->data.integer;
+        push(f, val1);
         break;
       }
       case 132: { // iinc
@@ -345,7 +391,7 @@ elem* exec(frame* f) {
         elem* e = get(f->lvarray, index);
         if (e->t != INT)
           err("iinc used but element at index is not int");
-        e->data.integer += (i4) con;
+        e->data.integer += (i1) con;
         break;
       }
       case 133: { // i2l
@@ -660,8 +706,10 @@ elem* exec(frame* f) {
             else 
               set(mt->lvarray, i, e);
           }
-          if (code[instr] != 184)
-            set(mt->lvarray, 0, pop(f));
+          if (code[instr] != 184) {
+            elem* arg = pop(f);
+            set(mt->lvarray, 0, arg);
+          }
           e = exec(mt);
         }
         if (e) {
@@ -696,9 +744,9 @@ elem* exec(frame* f) {
         u2 len = bs->attr.bs.bs_met[p->elem.inv->bmeth].args_len;
         u2* args = bs->attr.bs.bs_met[p->elem.inv->bmeth].args;
         string* base = new_empty_str();
-        char* buf[20];
+        char buf[20];
         elem* arg = NULL;
-        for (i4 i = find(desc, ')') - 1, j = 0; i > 0; i--) {
+        for (i4 i = find(desc, ')') - 1, j = 0; i >= 0; i--) {
           switch(at(desc, i)) {
             case 'B':
             case 'Z':
@@ -716,7 +764,7 @@ elem* exec(frame* f) {
             }
             case 'I': {
               arg = pop(f);
-              if (arg->t == INT) {
+              if (as_needed(arg->t) == INT) {
                 snprintf(buf, sizeof(buf), "%d", arg->data.integer);
               }
               else {
@@ -734,7 +782,7 @@ elem* exec(frame* f) {
             }
             case ';': {
               arg = pop(f);
-              if (arg->t == REF && equals(arg->data.ref->class, "java/lang/String")) {
+              if (arg->t == REF) {
                 string* str = tostring(arg);
                 cat_start(base, str->buf);
               }
@@ -758,12 +806,14 @@ elem* exec(frame* f) {
           }
           index = j;
         }
-        elem* e = (f->stack->len != 0) ? pop(f) : NULL;
-        if (e != NULL && (e->t == REF && equals(e->data.ref->class, "java/lang/String"))) 
+        elem* e = (f->stack->len == 0) ? NULL : pop(f);
+        if (e && e->t == REF && equals(e->data.ref->class, "java/lang/String")) 
           cat_start(base, tostring(e)->buf);
         else {
-          push(f, e);
+          if (e)
+            push(f, e);
           pool_elem* pe = get_elem(f->cp, args[index] + 1);
+          dbg("%d", pe->tag);
           if (pe->tag == STRING) {
             string* str = get_utf8(f->cp, pe->elem.string);
             cat_start(base, str->buf);
@@ -838,20 +888,20 @@ elem* exec(frame* f) {
       }
       default: err("Unrecognised or unimplemented opcode %d", code[pc]);
     }
-    stack_trace(f);
+    //stack_trace(f);
     pc++;
   }
 end:
    dbg("Method %s.%s with descriptor %s finished successfully", f->class->buf, f->mt->name->buf, f->mt->desc->buf);
    if (f->ret == EMPTY) {
-     delete(stack, stack->len - 1);
+     remove_last(stack);
      return NULL;
    }
    else {
      elem* ret = pop(f);
      if (as_needed(f->ret) != as_needed(ret->t))
        err("Return type doesn't match with actual element to return"); 
-     delete(stack, stack->len - 1);
+     remove_last(stack);
      return ret;
    }
 }

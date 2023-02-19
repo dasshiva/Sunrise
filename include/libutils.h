@@ -25,19 +25,22 @@ void cat_start(string* dest, const char* str);
 void replace(string* str, char c, char new);
 string* fmt_str(char* fmt, ...);
 
-typedef struct __list {
-  u4 len;
+typedef struct __node {
   u4 index;
   void* data;
-  struct __list* next;
-  struct __list* prev;
+  struct __node* next;
+} node;
+
+typedef struct {
+  u4 len;
+  node* head;
 } list;
+
 list* new_list(void);
 void add(list* l, void* data);
 void* get(list* l, u4 index);
 void set(list* l, u4 index, void* data);
-void delete(list* l, u4 index);
-void insert(list* l, u4 index, void* data);
+void remove_last(list* l);
 
 #define if_null(val, action) \
   if (val == NULL) \

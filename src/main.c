@@ -21,14 +21,20 @@ static void default_init(config* app) {
   if (app->debug == -1)
     app->debug = 0;
 }
+
 void handler(int signum) {
-  fprintf(stderr, "Segmentation fault ocurred");
+  switch (signum) {
+    case SIGSEGV: fputs("Segmentation fault ocurred", stderr); break;
+    case SIGINT: fputs("Exiting due to interrupt signal", stderr);
+    break;
+  }
   exit(1);
 }
 
 int main(int argc, char* argv[]) {
     GC_INIT();
     signal(SIGSEGV, &handler);
+    signal(SIGINT, &handler);
     char* actual_argv = argv;
     int total = argc;
     app = GC_MALLOC(sizeof(config));

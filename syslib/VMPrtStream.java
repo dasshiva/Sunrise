@@ -6,4 +6,7 @@ public class VMPrtStream extends VMObj {
   public void print(char c) {
 	  print(new String(new char[] {c}));
   }
+  public void println(char c) {
+    print(new String(new char[] {c}));
+  }
 }

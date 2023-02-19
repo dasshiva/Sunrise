@@ -2,19 +2,10 @@ package syslib;
 
 public class VMChar extends VMObj {
   public static boolean isDigit(char ch) {
-    switch (ch) {
-      case '1': case '2': case '3': case '4':
-      case '5': case '6': case '7': case '8':
-      case '9': return true;
-      default: return false;
-    }
+    return (ch >= 48 && ch <= 57);
   }
   public static boolean isLetter(char ch) {
-    if (ch >= 65 && ch <= 90)
-      return true;
-    else if (ch >= 97 && ch <= 122)
-      return true;
-    return false;
+    return (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122);
   }
   
   public static boolean isLowerCase(char ch) {
@@ -35,6 +26,9 @@ public class VMChar extends VMObj {
     return ch;
   }
   
+  public static boolean isWhitespace(char ch) {
+    return ch == ' ';
+  }
   public static char toUpperCase(char ch) {
     if (isUpperCase(ch))
       return (char) (ch + 32);

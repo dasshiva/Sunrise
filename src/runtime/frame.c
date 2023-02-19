@@ -35,7 +35,7 @@ void* pop(frame* f) {
   if (f->stack->len == 0)
     err("Stack underflow while executing method %s%s", f->mt->name->buf, f->mt->desc->buf);
   elem* el = get(f->stack, f->stack->len - 1);
-  delete(f->stack, f->stack->len - 1);
+  remove_last(f->stack);
   return el;
 }
 
