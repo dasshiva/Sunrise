@@ -1,5 +1,5 @@
-project('sunrise', ['c'],
-  version : '1.0',
+project('sunrise', 'c',
+  version : '1.1',
   default_options : ['warning_level=3'])
 add_global_arguments('-std=c99', language: 'c')
 src = ['src/main.c', 'src/runtime/loader.c', 'src/runtime/frame.c', 'src/runtime/exec.c', 'src/runtime/ref.c', 'src/runtime/native.c']
