@@ -12,7 +12,6 @@ public class VMScan extends VMObj {
       this.src = src;
     else
       throw new NullPointerException("Source to read input is null");
-    buffer = new String();
   }
   
   private void getLine() {
@@ -25,6 +24,7 @@ public class VMScan extends VMObj {
           break;
         buffer += c;
       }
+      buffer += ' ';
     } catch (IOException e) {
       throw new RuntimeException("IOException happened while reading");
     }
@@ -38,13 +38,14 @@ public class VMScan extends VMObj {
   
   public String next() {
     String token = new String();
-    if (index == buffer.length())
+    if (buffer == null || index == buffer.length())
       getLine();
-    for (; index < buffer.length(); index++) {
-      char c = buffer.charAt(index);
-      if (c == ' ') 
+    for (int i = 0; i < buffer.length(); i++) {
+      char c = buffer.charAt(i);
+      if (c == ' ')
         break;
       token += c;
+      System.out.println(token);
     }
     return token;
   }

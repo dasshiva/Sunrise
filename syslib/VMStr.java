@@ -2,11 +2,14 @@ package syslib;
 
 import syslib.VMObj;
 public class VMStr extends VMObj {
-	private char[] buffer;
-	private int len; 
+	private final char[] buffer;
+	private final int len; 
 	public VMStr(char[] args) {
-		len = args.length;
-		buffer = args;
+	  len = args.length;
+	  buffer = new char[len];
+	  for (int i = 0; i < len; i++) {
+	    buffer[i] = args[i];
+	  }
 	}
 	public VMStr(String rhs) {
 	  len = rhs.length();
@@ -17,7 +20,7 @@ public class VMStr extends VMObj {
 	}
 	public VMStr() {
 	  len = 0;
-	  buffer = new char[1];
+	  buffer = new char[0];
 	}
 	
 	public int length() {
@@ -27,5 +30,12 @@ public class VMStr extends VMObj {
 	  if (index >= buffer.length) 
 	    throw new StringIndexOutOfBoundsException("Index is more than or equal to String length");
 	  return buffer[index];
+	}
+	public char[] toCharArray() {
+	  char[] ret = new char[buffer.length];
+	  for (int i = 0; i < ret.length; i++) {
+	    ret[i] = buffer[i];
+	  }
+	  return ret;
 	}
 }

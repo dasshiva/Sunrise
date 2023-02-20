@@ -497,7 +497,7 @@ elem* exec(frame* f) {
         elem* val2 = pop(f);
         elem* val1 = pop(f);
         if (as_needed(val1->t) != INT || as_needed(val2->t) != INT)
-          err("if_icmpgt used but arguments are not ints");
+          err("if_icmp used but arguments are not ints");
         u1 res = 0;
         switch (code[pc] - 159) {
           case 0: res = val1->data.integer == val2->data.integer; break;
@@ -640,14 +640,13 @@ elem* exec(frame* f) {
               case 'C': fld->dyn_val.chr = (i2) e->data.integer; break;
               case 'S': fld->dyn_val.sht = (i2) e->data.integer; break;
               case 'Z': fld->dyn_val.bool = (i1) e->data.integer; break;
-              case 'I': fld->dyn_val.integer = e->data.integer; break;
+              case 'I': fld->dyn_val.integer = e->data.integer;
               default: err("Value at stack top not assignable to field");
-            }
+            }         
             break;
           }
           case LONG: {
             if (fld->desc->buf[0] != 'J')
-              err("Value at stack top not assignable to field");
             fld->dyn_val.lng = e->data.lng;
             break;
           }
@@ -708,6 +707,10 @@ elem* exec(frame* f) {
           }
           if (code[instr] != 184) {
             elem* arg = pop(f);
+            if (arg->t != REF)
+              err("invokespecial and invokevirtual need instances");
+            if (arg->data.ref == NULL)
+              throw("java.lang.NullPointerException", "self is null");
             set(mt->lvarray, 0, arg);
           }
           e = exec(mt);

@@ -16,3 +16,4 @@ syslib/VMSys.java
 syslib/VMNullPtrEx.java
 syslib/VMInt.java
 syslib/VMChar.java
+syslib/VMStrBuild.java

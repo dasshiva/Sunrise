@@ -7,13 +7,66 @@
 #define init_list() \
  if(classes == NULL) \
  classes = new_list()
-#define SYSLIB_SZ 16
+#define SYSLIB_SZ 17
+#define MPATCH_SZ 1
 static list* classes = NULL;
 static int is_loaded(string* name);
-char* syslib[2][SYSLIB_SZ] = {
-  { "java/lang/Object", "java/lang/String", "java/lang/System", "java/io/PrintStream", "java/lang/Exception", "java/lang/RuntimeException", "java/lang/ArrayIndexOutOfBoundsException", "java/lang/StringIndexOutOfBoundsException", "java/io/InputStream", "java/lang/Math", "java/util/Scanner", "java/lang/ArrayIndexOutOfBoundsException", "java/lang/NullPointerException", "java/lang/Character", "java/lang/Integer", NULL}, 
-  { "syslib/VMObjExt", "syslib/VMStr", "syslib/VMSys", "syslib/VMPrtStream", "syslib/VMEx", "syslib/VMRtEx", "syslib/VMArrIndEx", "syslib/VMStrIndEx", "syslib/VMIStream", "syslib/VMMath", "syslib/VMScan", "syslib/VMArrIndEx", "syslib/VMNullPtrEx", "syslib/VMChar", "syslib/VMInt", NULL }
+static char* syslib[2][SYSLIB_SZ] = {
+  { "java/lang/Object", "java/lang/String", "java/lang/System", "java/io/PrintStream", "java/lang/Exception", "java/lang/RuntimeException", "java/lang/ArrayIndexOutOfBoundsException", "java/lang/StringIndexOutOfBoundsException", "java/io/InputStream", "java/lang/Math", "java/util/Scanner", "java/lang/ArrayIndexOutOfBoundsException", "java/lang/NullPointerException", "java/lang/Character", "java/lang/Integer", "java/lang/StringBuilder", NULL}, 
+  { "syslib/VMObjExt", "syslib/VMStr", "syslib/VMSys", "syslib/VMPrtStream", "syslib/VMEx", "syslib/VMRtEx", "syslib/VMArrIndEx", "syslib/VMStrIndEx", "syslib/VMIStream", "syslib/VMMath", "syslib/VMScan", "syslib/VMArrIndEx", "syslib/VMNullPtrEx", "syslib/VMChar", "syslib/VMInt", "syslib/VMStrBuild", NULL }
 };
+
+static string* patch_desc(string* desc, char* replace) {
+  string* str = new_empty_str();
+  for (u4 i = 0; i < desc->len; i++) {
+    char c = at(desc, i);
+    switch(c) {
+      case 'L': {
+        int semi = find(desc, ';');
+        string* class = substr(desc, i + 1, semi);
+        if (starts_with(class, "syslib")) {
+          append(str, c);
+          concat(str, replace);
+          i = semi - 1;
+        }
+        else 
+           append(str, c);
+        break;
+      }
+      case ')': {
+        int dend = find(desc, ')') + 1;
+        string* ret = substr(desc, dend, desc->len);
+        if (starts_with(ret, "Lsyslib")) {
+          append(str, ')');
+          append(str, 'L');
+          concat(str, replace);
+          append(str, ';');
+          goto end;
+        }
+      }
+      default: append(str, c);
+    }
+  }
+  
+end:
+  GC_FREE(desc);
+  return str;
+}
+
+static void patch(int s, class* c) {
+  switch (s) {
+    case 15: break;
+    default: return;
+  }
+  for (u2 i = 0; i < c->mets_count; i++) {
+    method* m = get(c->methods, i);
+    if (is(m, PRIV) || m->desc->len < 7)
+      continue;
+    dbg("Found method %s %s in patchable class ", m->name->buf, m->desc->buf);
+    m->desc = patch_desc(m->desc, syslib[0][s]);
+    dbg("Patched descriptor to %s", m->desc->buf);
+  }
+}
 
 class* get_class(char* file) {
   init_list();
@@ -54,6 +107,7 @@ int load_jar(char* file) {
           pe->elem.utf = new_str(syslib[0][i]);
           set(c->cp, c->this_index - 1, pe);
           dbg("Patched class to %s", c->this_class->buf);
+          patch(i, c);
           add(classes, c);
           break;
         }
