@@ -6,7 +6,7 @@ meson compile -C build
 if [[ "$0" == "full-build.sh" ]]; then
 	$jdk/javac syslib/Make.java                                  
 	$jdk/java syslib/Make syslib/VMObj.class
-	parallel -j 8 javac {} < classlist
+	parallel -j 8 javac -XDstringConcat=inline {} < classlist
 	rm syslib/Make.class
 	jar cf syslib.jar syslib/*.class
 fi

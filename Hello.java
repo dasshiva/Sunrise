@@ -1,8 +1,8 @@
 import java.util.*;
 public class Hello {
 	private static int length;
-	public static void main(String[] args) throws Exception {
-		int a = 98;
-		System.out.println("Hello" + a);
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		int a = sc.nextInt();
 	}
 }

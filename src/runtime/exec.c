@@ -718,7 +718,7 @@ elem* exec(frame* f) {
         break;
       }
       case 186: { // invokedynamic
-        class* c = get_class(f->class->buf);
+        /*class* c = get_class(f->class->buf);
         attrs* bs = NULL;
         for (int i = 0; i < c->attrs->len; i++) {
           bs = get(c->attrs, i);
@@ -758,7 +758,7 @@ elem* exec(frame* f) {
             if (elem->tag != IMREF)
               err("constant pool ref is not an interface method ref");
             break;
-          }
+          } 
           default: err("Invalid reference kind of method handle");
         }
         
