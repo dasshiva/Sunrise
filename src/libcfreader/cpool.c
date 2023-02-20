@@ -103,6 +103,13 @@ list* new_cpool(handle* h, u2 len) {
         pelem->elem.mref = melem;
         break;
       }
+      case IMREF: {
+        mfiref_elem* imelem = GC_MALLOC(sizeof(mfiref_elem));
+        imelem->class = get_u2(h);
+        imelem->nt = get_u2(h);
+        pelem->elem.iref = imelem;
+        break;
+      }
       case NTYPE: {
         ntype_elem* nelem = GC_MALLOC(sizeof(ntype_elem));
         nelem->name = get_u2(h);

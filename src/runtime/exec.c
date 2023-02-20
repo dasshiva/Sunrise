@@ -718,20 +718,6 @@ elem* exec(frame* f) {
         break;
       }
       case 186: { // invokedynamic
-        u2 index;
-        make(index);
-        pc += 2;
-        pool_elem* p = get_elem(f->cp, index);
-        if (p->tag != INVDYN)
-          err("constant pool ref is not invoke dynamic info");
-        pool_elem* pe = get_elem(f->cp, p->elem.inv->nt);
-        if (pe->tag != NTYPE)
-          err("constant pool ref is not name type");
-        string* name = get_utf8(f->cp, pe->elem.nt->name);
-        if (!equals(name, "makeConcatWithConstants"))
-          err("Unsupported dynamic method %s", name->buf);
-        dbg("Starting dynamic method: %s", name->buf);
-        string* desc = get_utf8(f->cp, pe->elem.nt->desc);
         class* c = get_class(f->class->buf);
         attrs* bs = NULL;
         for (int i = 0; i < c->attrs->len; i++) {
@@ -741,86 +727,49 @@ elem* exec(frame* f) {
         }
         if (!bs)
           err("Attribute BootstrapMethods not found");
+        u2 index;
+        make(index);
+        pc += 2;
+        pool_elem* p = get_elem(f->cp, index);
+        if (p->tag != INVDYN)
+          err("constant pool ref is not invoke dynamic info");
+        u2 ref = bs->attr.bs.bs_met[p->elem.inv->bmeth].ref;
+        pool_elem* handle = get_elem(f->cp, ref);
+        if (handle->tag != MHANDLE)
+          err("constant pool ref is not method handle");
+        pool_elem* elem = get_elem(f->cp, handle->elem.handle->ref_index);
+        switch(handle->elem.handle->ref_kind) {
+          case 1: case 2: 
+          case 3: case 4: {
+            if (elem->tag != FIELD)
+              err("constant pool ref is not field");
+            break;
+          }
+          case 5: case 6:
+          case 7: case 8: {
+            if (elem->tag != MREF && elem->tag != IMREF)
+              err("constant pool ref is neither method ref nor interface method ref");
+            break;
+          }
+          case 9: {
+            if (elem->tag != IMREF)
+              err("constant pool ref is not an interface method ref");
+            break;
+          }
+          default: err("Invalid reference kind of method handle");
+        }
+        
+        /*pool_elem* pe = get_elem(f->cp, p->elem.inv->nt);
+        if (pe->tag != NTYPE)
+          err("constant pool ref is not name type");
+        string* name = get_utf8(f->cp, pe->elem.nt->name);
+        dbg("Starting dynamic method: %s", name->buf);
+        string* desc = get_utf8(f->cp, pe->elem.nt->desc);
+        class* c = get_class(f->class->buf);
+        
         u2 len = bs->attr.bs.bs_met[p->elem.inv->bmeth].args_len;
-        u2* args = bs->attr.bs.bs_met[p->elem.inv->bmeth].args;
-        string* base = new_empty_str();
-        char buf[20];
-        elem* arg = NULL;
-        for (i4 i = find(desc, ')') - 1, j = 0; i >= 0; i--) {
-          switch(at(desc, i)) {
-            case 'B':
-            case 'Z':
-            case 'S': {
-              arg = pop(f);
-              snprintf(buf, sizeof(buf), "%d", arg->data.integer);
-              cat_start(base, buf);
-              break;
-            }
-            case 'C': {
-              arg = pop(f);
-              snprintf(buf, sizeof(buf), "%c", arg->data.integer);
-              cat_start(base, buf);
-              break;
-            }
-            case 'I': {
-              arg = pop(f);
-              if (as_needed(arg->t) == INT) {
-                snprintf(buf, sizeof(buf), "%d", arg->data.integer);
-              }
-              else {
-                push(f, arg);
-                if (j < len) {
-                  pool_elem* pe = get_elem(f->cp, args[j]);
-                  if (pe->tag == INT) {
-                    j++;
-                    snprintf(buf, sizeof(buf), "%d", pe->elem.integer);
-                  }
-                }
-              }
-              cat_start(base, buf);
-              break;
-            }
-            case ';': {
-              arg = pop(f);
-              if (arg->t == REF) {
-                string* str = tostring(arg);
-                cat_start(base, str->buf);
-              }
-              else {
-                push(f, arg);
-                if (j < len) {
-                  pool_elem* pe = get_elem(f->cp, args[j]);
-                  if (pe->tag == STRING) {
-                    j++;
-                    cat_start(base, get_utf8(f->cp, pe->elem.string)->buf);
-                  }
-                }
-              }
-              int end = find(desc, 'L');
-              desc = substr(desc, 0, end);
-              i = end - 1;
-              break;
-            }
-            case '(': i = -1 ; break;
-            default: err("Not supported %c", at(desc, i));
-          }
-          index = j;
-        }
-        elem* e = (f->stack->len == 0) ? NULL : pop(f);
-        if (e && e->t == REF && equals(e->data.ref->class, "java/lang/String")) 
-          cat_start(base, tostring(e)->buf);
-        else {
-          if (e)
-            push(f, e);
-          pool_elem* pe = get_elem(f->cp, args[index] + 1);
-          dbg("%d", pe->tag);
-          if (pe->tag == STRING) {
-            string* str = get_utf8(f->cp, pe->elem.string);
-            cat_start(base, str->buf);
-          }
-        }
-        dbg("Finished dynamic method");
-        push(f, get_string(base));
+        u2* args = bs->attr.bs.bs_met[p->elem.inv->bmeth].args; */
+        err("invokedynamic not supported");
         break;
       }
       case 187: { // new

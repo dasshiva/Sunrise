@@ -24,6 +24,7 @@ void skip(handle* h, u4 amt);
 #define STRING 8 // CONSTANT_String
 #define FIELD 9 // CONSTANT_FieldRef
 #define MREF 10 // CONSTANT_MethodRef
+#define IMREF 11 // CONSTANT_InterfaceMethodRef
 #define NTYPE 12 // CONSTANT_NameAndType
 #define MHANDLE 15// CONSTANT_MethodHandle
 #define MTYPE 16 // CONSTANT_MethodType
