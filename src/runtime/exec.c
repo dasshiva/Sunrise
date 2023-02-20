@@ -749,6 +749,9 @@ elem* exec(frame* f) {
           case 7: case 8: {
             if (elem->tag != MREF && elem->tag != IMREF)
               err("constant pool ref is neither method ref nor interface method ref");
+            mfiref_elem* func = elem->elem.mref;
+            class* met = get_class(get_utf8(f->cp, func->class)->buf);
+            //dbg("%s", func->desc);
             break;
           }
           case 9: {
